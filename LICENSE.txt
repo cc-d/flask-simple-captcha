@@ -1,0 +1,6 @@
+if you find this project useful, please acredit me somewhere visible in your project, and consider either hiring me or donating to:
+
+BTC 16bG5Xpd54yt4fT7DD9vWGo9NEEATHLd79
+XMR 48e8yy7jyjT7RGDheWmr8Phemmxu4Z4haA8eLurKaLxi2CpzAZ5xP5hdHYmB1aJTzji1ToihZLudiHECKVL18gvm3HkqSiz
+
+otherwise, MIT
