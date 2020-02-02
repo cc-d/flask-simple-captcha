@@ -4,12 +4,13 @@ or if installing from source
 ```python3 setup.py install```
 
 # How to use
-This package is intended to assign a unique CSRF string per each form submit per user session, without requiring any backend session tracking. First, you'll want to set a variable `SECRET_CSRF_KEY` in your app config to a random, complex string. Example: `SECRET_CSRF_KEY = 'wMmeltW4mhwidorQRli6Oijuhygtfgybunxx9VPXldz'`
+This package is intended to assign a unique CSRF string per each form submit per user session, without requiring any backend session tracking. First, you'll want to set a variable `CAPTCHA_CONFIG['SECRET_CSRF_KEY']` in your app config to a random, complex string. Example: `CAPTCHA_CONFIG = {'SECRET_CSRF_KEY':'wMmeltW4mhwidorQRli6Oijuhygtfgybunxx9VPXldz'}`
 
 Second, add this to the top of your code.
 
 ```
-import flask_simple_captcha as CAPTCHA
+from flask_simple_captcha import CAPTCHA
+CAPTCHA = CAPTCHA(config=config.CAPTCHA_CONFIG)
 app = CAPTCHA.init_app(app)
 ```
 
