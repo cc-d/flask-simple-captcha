@@ -56,7 +56,6 @@ class CAPTCHA:
     def create(self, length=None, digits=None):
         length = self.config['CAPTCHA_LENGTH'] if length is None else length
         digits = self.config['CAPTCHA_DIGITS'] if digits is None else digits
-        print(length, digits, '@@@@@@')
         size = 30
         width, height = length * size, size
     
@@ -69,7 +68,6 @@ class CAPTCHA:
     
         f_path = os.path.dirname(os.path.realpath(__file__))
         f_path = os.path.join(f_path, 'arial.ttf')
-        print(f_path)
         fnt = ImageFont.truetype(f_path, size)
     
         d = ImageDraw.Draw(txt)
