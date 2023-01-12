@@ -17,7 +17,7 @@ app = CAPTCHA.init_app(app)
 For each route you want captcha protected, add the following code:
 
 ```
-@app.route('/example, methods=['GET','POST']
+@app.route('/example', methods=['GET','POST'])
 def example():
     if request.method == 'GET':
         captcha = CAPTCHA.create()
