@@ -22,5 +22,5 @@ setup(
     ],
     packages=find_packages(exclude=('tests',)),
     include_package_data=True,
-    install_requires=['Werkzeug<=2.3.6,>=0.16.0', 'Pillow>6,<9']
+    install_requires=['Werkzeug<3,>=0.16.0', 'Pillow>6,<9']
 )
