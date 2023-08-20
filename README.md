@@ -1,6 +1,6 @@
 # Flask Simple CAPTCHA
 
-A simple CAPTCHA solution for Flask applications. Generate and validate CAPTCHAs to protect your forms from bots. Does not require server side sessions.
+A simple CAPTCHA solution for Flask applications. Generate and validate CAPTCHAs to protect your forms from bots. Does not require server side sessions packages. 
 
 ## Features
 
