@@ -1,6 +1,6 @@
 # Flask Simple CAPTCHA
 
-A simple CAPTCHA solution for Flask applications. Generate and validate CAPTCHAs to protect your forms from bots. Does not require server side sessions packages. 
+A simple CAPTCHA solution for Flask applications. Generate and validate CAPTCHAs to protect your forms from bots. Does not require server-side sessions packages.
 
 ## Features
 
@@ -8,6 +8,12 @@ A simple CAPTCHA solution for Flask applications. Generate and validate CAPTCHAs
 - Easy to integrate into Flask applications
 - Built-in image rendering
 - Utilizes UUID for verification (Note: The hash was previously used for submissions, but now the UUID is used instead.)
+
+## Prerequisites
+
+- Python 3.x
+- Flask framework
+- Pillow for image manipulation
 
 ## Installation
 
@@ -30,17 +36,17 @@ Configure CAPTCHA by passing a dictionary of configuration options to the `CAPTC
 Example:
 
 ```python
-CAPTCHA_CONFIG = {'SECRET_CAPTCHA_KEY':'wMmeltW4mhwidorQRli6Oijuhygtfgybunxx9VPXldz'}
+CAPTCHA_CONFIG = {'SECRET_CAPTCHA_KEY':'LONGSTRINGLONGSTRING...'}
 ```
 
 Here's a table of available options:
 
-| Option                | Description                                                   | Default Value                  |
-|-----------------------|---------------------------------------------------------------|--------------------------------|
-| `SECRET_CAPTCHA_KEY`  | A secret key for hashing CAPTCHA (40 or 50 characters long)   | 'CHANGEME - 40 or 50 character long key here' |
-| `METHOD`              | Hashing method                                                | 'pbkdf2:sha256:100'             |
-| `CAPTCHA_LENGTH`      | Length of the CAPTCHA text                                    | 6                              |
-| `CAPTCHA_DIGITS`      | Include digits in CAPTCHA text (True/False)                   | False                          |
+| Option               | Description                                 | Default Value                            |
+| -------------------- | ------------------------------------------- | ---------------------------------------- |
+| `SECRET_CAPTCHA_KEY` | A secret key for hashing CAPTCHA            | 'CHANGEME - 40 or 50 character long key' |
+| `METHOD`             | Hashing method                              | 'pbkdf2:sha256:100'                      |
+| `CAPTCHA_LENGTH`     | Length of the CAPTCHA text                  | 6                                        |
+| `CAPTCHA_DIGITS`     | Include digits in CAPTCHA text (True/False) | False                                    |
 
 ## How to Use
 
@@ -77,9 +83,15 @@ In the HTML forms, use:
 
 ```
 {{ captcha_html(captcha) | safe }}
-````
+```
 
- This will create input fields for CAPTCHA.
+This will create input fields for CAPTCHA.
+
+## API Reference
+
+- `CAPTCHA.create(length=None, digits=None)`: Creates a CAPTCHA with the specified length and digits. Returns a CaptchaHash object.
+- `CAPTCHA.verify(c_text, c_hash)`: Verifies the CAPTCHA text and hash. Returns True if valid, False otherwise.
+- `CAPTCHA.captcha_html(captcha)`: Returns HTML for rendering the CAPTCHA image and input fields.
 
 ## Running Tests
 
@@ -95,6 +107,12 @@ pip install -r requirements_dev.txt
 python3 tests.py
 ```
 
+## Contributing
+
+Just open a PR. This project was abandoned for years, but as of these most recent commits, has actual quality code but I sunk a weekend into it.
+
 ## License
 
-This project is licensed under the MIT License.
+MIT
+
+ccarterdev@gmail.com contact me if you think you will pay me more than i'm being paid currently

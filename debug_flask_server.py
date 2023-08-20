@@ -13,7 +13,9 @@ def example():
     if request.method == 'GET':
         captcha = CAPTCHA.create()
         return render_template_string(
-            '<form method="post">{{ captcha_html(captcha) | safe }}<input type="submit"></form>',
+            '<form method="post">'
+            + '{{ captcha_html(captcha) | safe }}'
+            + '<input type="submit"></form>',
             captcha=captcha,
         )
     if request.method == 'POST':
