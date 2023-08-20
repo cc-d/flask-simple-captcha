@@ -1,46 +1,46 @@
 #!/usr/bin/env python3
+from typing import Tuple, Dict
 import base64
 import string
 import random
 import os
-import datetime
 from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from uuid import uuid4
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 DEFAULT_CONFIG = {
     'SECRET_CAPTCHA_KEY': 'CHANGEME - 40 or 50 character long key here',
     'METHOD': 'pbkdf2:sha256:100',
     'CAPTCHA_LENGTH': 6,
     'CAPTCHA_DIGITS': False,
+    'EXPIRE_MINUTES': 15,
 }
 
 
 class CAPTCHA:
-
     def __init__(self, config: dict):
-        self.config = DEFAULT_CONFIG
-        for key in config.keys():
-            self.config[key] = config[key]
-
+        """Initialize CAPTCHA with default configuration."""
+        self.config = DEFAULT_CONFIG.copy()
+        self.config.update(config)  # Update with provided config for 3.7 compatibility
         self.unique_salt = ''.join(
             random.choice(string.ascii_letters + string.digits) for _ in range(16)
         )
-        self.captcha_data = {}  # A dictionary to store the CAPTCHA data
+        self.captchas = {}  # A dictionary to store the CAPTCHA data
         self.characters = string.ascii_uppercase
         if self.config['CAPTCHA_DIGITS']:
-            self.characters = self.characters + string.digits
+            self.characters += string.digits
         self.verified_ids = set()
 
-    def get_background(self, text_size):
-        background = Image.new(
+    def get_background(self, text_size: Tuple[int, int]) -> Image:
+        """Generate a background image."""
+        return Image.new(
             'RGBA',
             (int(text_size[0] * 1.25), int(text_size[1] * 1.5)),
             color=(0, 0, 0, 255),
         )
-        return background
 
     def draw_lines(self, im, lines=25):
         draw = ImageDraw.Draw(im)
@@ -68,7 +68,8 @@ class CAPTCHA:
                 )
         return im
 
-    def create(self, length=None, digits=None):
+    def create(self, length=None, digits=None) -> dict:
+        """Create a new CAPTCHA dict and add it to self.captchas"""
         length = self.config['CAPTCHA_LENGTH'] if length is None else length
         digits = self.config['CAPTCHA_DIGITS'] if digits is None else digits
 
@@ -119,12 +120,7 @@ class CAPTCHA:
         out = background.resize((200, 60))
         out = self.draw_lines(out)
 
-        self.captcha_data[c_hash] = {'id': unique_id, 'timestamp': datetime.now()}
-
-        c_hash = c_hash.replace(self.config['METHOD'] + '$', '')
-
-
-        print(self.captcha_data)
+        self.captchas[unique_id] = {'hash': c_hash, 'timestamp': datetime.now()}
 
         return {
             'img': self.convert_b64img(out),
@@ -154,51 +150,47 @@ class CAPTCHA:
             '<input type="text" class="simple-captcha-text"'
             + 'name="captcha-text">\n'
             + '<input type="hidden" name="captcha-hash" '
-            + 'value="%s">' % captcha['hash']
+            + 'value="%s">' % captcha['id']
         )
 
         return '%s\n%s' % (img, inpu)
 
-    def verify(self, c_text, c_hash, c_key=None):
+    def verify(self, c_text: str, c_hash: str) -> bool:
+        """Verify CAPTCHA response.
+
+        Note: The hash was previously used for submissions, but now the UUID is used instead.
+        """
         self.cleanup_old_hashes()
+        captcha_uuid = c_hash  # Necessary for legacy/backwards compatibility reasons
 
-        c_hash = self.config['METHOD'] + '$' + c_hash
-
-        # Check if the CAPTCHA data exists
-        captcha_hash = self.captcha_data.get(c_hash)
-
-        if captcha_hash is None:
+        if captcha_uuid in self.verified_ids or captcha_uuid not in self.captchas:
             return False
 
-        c_id = captcha_hash['id']
-        if c_id in self.verified_ids:
-            return False
-
+        captcha_dict = self.captchas.get(captcha_uuid)
+        c_hash = captcha_dict['hash']
         c_text = c_text.upper()
-
         c_key = c_text + self.config['SECRET_CAPTCHA_KEY'] + self.unique_salt
 
         # Verification passed, so remove the CAPTCHA data
-        print(self.captcha_data)
-        print(c_hash)
-        print(c_key)
         if check_password_hash(c_hash, c_key):
-            del self.captcha_data[c_hash]
+            del self.captchas[captcha_uuid]
+            self.verified_ids.add(captcha_uuid)  # Store verified IDs
             return True
+
         return False
 
     def cleanup_old_hashes(self):
         # Set the time limit for valid hashes
-        time_limit = datetime.now() - timedelta(minutes=1)
+        time_limit = datetime.now() - timedelta(minutes=self.config['EXPIRE_MINUTES'])
 
         # Remove hashes older than the time limit
-        old_hashes = [
-            hash_key
-            for hash_key, data in self.captcha_data.items()
+        old_uuids = [
+            uuid_key
+            for uuid_key, data in self.captchas.items()
             if data['timestamp'] < time_limit
         ]
-        for hash_key in old_hashes:
-            del self.captcha_data[hash_key]
+        for uuid_key in old_uuids:
+            del self.captchas[uuid_key]
 
     def init_app(self, app):
         app.jinja_env.globals.update(captcha_html=self.captcha_html)
