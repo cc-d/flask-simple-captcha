@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime, timedelta
-from flask_simple_captcha import CAPTCHA, DEFAULT_CONFIG
+from flask_simple_captcha import CaptchaHash, CAPTCHA, DEFAULT_CONFIG
+from werkzeug.security import generate_password_hash
 
 
 class TestCAPTCHA(unittest.TestCase):
@@ -8,49 +9,90 @@ class TestCAPTCHA(unittest.TestCase):
         self.captcha = CAPTCHA(DEFAULT_CONFIG)
 
     def test_create(self):
-        result = self.captcha.create()
-        self.assertIn('img', result)
-        self.assertIn('text', result)
-        self.assertIn('hash', result)
-        self.assertIn('id', result)
-        self.assertEqual(len(result['text']), DEFAULT_CONFIG['CAPTCHA_LENGTH'])
+        caphash = self.captcha.create()
+
+        # Check if the returned value is a CaptchaHash object
+        self.assertIsInstance(caphash, CaptchaHash)
+
+        self.assertEqual(len(caphash.text), DEFAULT_CONFIG['CAPTCHA_LENGTH'])
 
     def test_verify_valid(self):
-        captcha_data = self.captcha.create()
-        c_text = captcha_data['text']
-        c_hash = captcha_data['id']
-        self.assertTrue(self.captcha.verify(c_text, c_hash))
-        self.assertFalse(self.captcha.verify(c_text, c_hash))
+        text = 'TESTTEXT'
+        c_key = (
+            text
+            + DEFAULT_CONFIG['SECRET_CAPTCHA_KEY']
+            + self.captcha.unique_salt
+        )
+        c_hash = generate_password_hash(c_key, method=DEFAULT_CONFIG['METHOD'])
+
+        caphash = CaptchaHash(
+            b64img="b64img",
+            text="TEXTTEXT",
+            unique_salt=self.captcha.unique_salt,
+            expires_minutes=1,
+            secret_key=c_key,
+            c_hash=c_hash,
+        )
+
+        self.captcha.captchas[caphash.uuid] = caphash
+
+        self.assertTrue(self.captcha.verify(text, caphash.uuid))
+        self.assertFalse(self.captcha.verify(text, caphash.uuid))
 
     def test_verify_invalid(self):
-        captcha_data = self.captcha.create()
+        capdata = self.captcha.create()
         c_text = "WRONGTEXT"
-        c_hash = captcha_data['id']
+        c_hash = capdata.uuid
         self.assertFalse(self.captcha.verify(c_text, c_hash))
 
     def test_cleanup_old_hashes(self):
         # Add an old CAPTCHA entry
-        c_hash = 'dummy_hash'
-        timestamp = datetime.now() - timedelta(minutes=self.captcha.config['EXPIRE_MINUTES'] + 1)
-        self.captcha.captchas[c_hash] = {'id': 'dummy_id', 'timestamp': timestamp}
+        text = 'TESTTEXT'
+        c_key = (
+            text
+            + DEFAULT_CONFIG['SECRET_CAPTCHA_KEY']
+            + self.captcha.unique_salt
+        )
+        c_hash = generate_password_hash(c_key, method=DEFAULT_CONFIG['METHOD'])
+        caphash = CaptchaHash(
+            secret_key=c_key,
+            c_hash=c_hash,
+            b64img="b64img",
+            text="TEXTTEXT",
+            unique_salt=self.captcha.unique_salt,
+            expires_minutes=-(self.captcha.config['EXPIRE_MINUTES'] + 100),
+        )
 
-        # Verify the old CAPTCHA entry is present
-        self.assertIn(c_hash, self.captcha.captchas)
+        c_key = (
+            'TESTTEST'
+            + DEFAULT_CONFIG['SECRET_CAPTCHA_KEY']
+            + caphash.unique_salt
+        )
+        c_hash = generate_password_hash(c_key, method=caphash.method)
 
-        # Run cleanup method
+        # Manually set created time to past
+        caphash.expires = datetime.now() - timedelta(
+            minutes=self.captcha.config['EXPIRE_MINUTES'] + 100
+        )
+
         self.captcha.cleanup_old_hashes()
 
-        # Verify the old CAPTCHA entry has been removed
-        self.assertNotIn(c_hash, self.captcha.captchas)
+        self.assertTrue(caphash.uuid not in self.captcha.captchas)
 
     def test_captcha_html(self):
-        captcha_data = self.captcha.create()
-        html = self.captcha.captcha_html(captcha_data)
+        caphash = self.captcha.create()
+        c_key = (
+            caphash.text
+            + DEFAULT_CONFIG['SECRET_CAPTCHA_KEY']
+            + caphash.unique_salt
+        )
+        html = self.captcha.captcha_html(caphash)
         # Check if the returned value is a string containing HTML
         self.assertIsInstance(html, str)
         self.assertIn('<img', html)
         self.assertIn(
-            '<input type="hidden" name="captcha-hash" value="%s">' % captcha_data['id'],
+            '<input type="hidden" name="captcha-hash" value="%s">'
+            % caphash.uuid,
             html,
         )
 

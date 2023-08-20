@@ -1,3 +1,0 @@
-Werkzeug<3,>=0.16.0
-Pillow>=6,<9
-Flask

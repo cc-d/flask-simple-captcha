@@ -18,9 +18,9 @@ setup(
     classifiers=[
         'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.7'
+        'Programming Language :: Python :: 3.7',
     ],
     packages=find_packages(exclude=('tests',)),
     include_package_data=True,
-    install_requires=['Werkzeug<3,>=0.16.0', 'Pillow>6,<9']
+    install_requires=['Werkzeug<3,>=0.16.0', 'Pillow>6,<9', 'myfuncs>=1.4.8'],
 )
