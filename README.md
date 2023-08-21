@@ -1,54 +1,27 @@
-# Flask Simple CAPTCHA
+# flask-simple-captcha
 
-### CURRENT VERSION: **v2.2.0**
+### CURRENT VERSION: **v3.0.0**
 
-A simple CAPTCHA solution for Flask applications. Generate and validate CAPTCHAs to protect your forms from bots. Does not require server-side sessions packages.
+`flask-simple-captcha` is a robust CAPTCHA generator class that allows for the creation and verification of CAPTCHAs. This class allows for easy integration into various Flask applications. This library leverages Pillow for image rendering and UUID for unique identification.
 
 ## Features
 
-- Customizable CAPTCHA length and characters
-- Easy to integrate into Flask applications
-- Built-in image rendering
-- Utilizes UUID for verification (Note: The hash was previously used for submissions, but now the UUID is used instead.)
+- Generates CAPTCHAs with customizable length and characters
+- Easy integration with various Flask applications
+- Built-in image rendering and line drawing for added complexity
+- Base64 image encoding for easy embedding
+- JWT-based verification for secure CAPTCHA checks
+- Does not require server-side sessions
+- Backwards compatible with 1.0 versions of this package
 
 ## Prerequisites
 
-- Python 3.x
-- Flask framework
-- Pillow for image manipulation
+- Python 3.7 or higher
+- Pillow library for image manipulation
 
 ## Installation
 
-You can install the package using pip:
-
-```bash
-pip3 install flask-simple-captcha
-```
-
-Or, if installing from source:
-
-```bash
-python3 setup.py install
-```
-
-## Configuration
-
-Configure CAPTCHA by passing a dictionary of configuration options to the `CAPTCHA` class. First, you'll want to set a variable `CAPTCHA_CONFIG['SECRET_CAPTCHA_KEY']` in your app config to a random, complex string.
-
-Example:
-
-```python
-CAPTCHA_CONFIG = {'SECRET_CAPTCHA_KEY':'LONGSTRINGLONGSTRING...'}
-```
-
-Here's a table of available options:
-
-| Option               | Description                                 | Default Value                            |
-| -------------------- | ------------------------------------------- | ---------------------------------------- |
-| `SECRET_CAPTCHA_KEY` | A secret key for hashing CAPTCHA            | 'CHANGEME - 40 or 50 character long key' |
-| `METHOD`             | Hashing method                              | 'pbkdf2:sha256:100'                      |
-| `CAPTCHA_LENGTH`     | Length of the CAPTCHA text                  | 6                                        |
-| `CAPTCHA_DIGITS`     | Include digits in CAPTCHA text (True/False) | False                                    |
+You can use this package by directly importing it into your Flask project. Ensure that all dependencies are installed in your environment.
 
 ## How to Use
 
@@ -70,7 +43,7 @@ For each route you want captcha protected, add the following code:
 @app.route('/example', methods=['GET','POST'])
 def example():
     if request.method == 'GET':
-        captcha = SIMPLE_CAPTCHA.create()
+        captcha = CAPTCHA.create()
         render_template('example.html', captcha=captcha)
     if request.method == 'POST':
         c_hash = request.form.get('captcha-hash')
@@ -83,17 +56,16 @@ def example():
 
 In the HTML forms, use:
 
+```html
+<!-- your_template.html -->
+<div class="captcha-container">{{ captcha_html|safe }}</div>
 ```
-{{ captcha_html(captcha) | safe }}
-```
 
-This will create input fields for CAPTCHA.
+## License
 
-## API Reference
+MIT
 
-- `CAPTCHA.create(length=None, digits=None)`: Creates a CAPTCHA with the specified length and digits. Returns a CaptchaHash object.
-- `CAPTCHA.verify(c_text, c_hash)`: Verifies the CAPTCHA text and hash. Returns True if valid, False otherwise.
-- `CAPTCHA.captcha_html(captcha)`: Returns HTML for rendering the CAPTCHA image and input fields.
+---
 
 ## Running Tests
 

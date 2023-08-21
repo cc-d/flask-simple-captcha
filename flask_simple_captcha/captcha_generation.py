@@ -3,39 +3,26 @@ import random
 import string
 import os
 import sys
+import json
 from datetime import datetime
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
 from typing import Tuple
 from uuid import uuid4
 from werkzeug.security import check_password_hash, generate_password_hash
-from flask_simple_captcha.config import DEFAULT_CONFIG
-from flask_simple_captcha.captcha_hash import CaptchaHash
+from .config import DEFAULT_CONFIG
 from myfuncs import default_repr
+
+from .utils import jwtencode, jwtdecode, CHARPOOL, gen_captcha_text
 
 
 class CAPTCHA:
     """CAPTCHA class to generate and validate CAPTCHAs."""
 
-    CHARPOOL = (
-        string.ascii_uppercase + string.digits
-        if DEFAULT_CONFIG['CAPTCHA_DIGITS']
-        else string.ascii_uppercase
-    )
-
     def __init__(self, config: dict):
         """Initialize CAPTCHA with default configuration."""
         self.config = {**DEFAULT_CONFIG, **config}
-        self.unique_salt = ''.join(
-            random.choice(CAPTCHA.CHARPOOL)
-            for _ in range(self.config['UNIQUE_SALT_LENGTH'])
-        )
-        self.captchas = {}  # A dictionary to store the CAPTCHA data
-        self.characters = (
-            string.ascii_uppercase + string.digits
-            if self.config['CAPTCHA_DIGITS']
-            else string.ascii_uppercase
-        )
+        self.characters = CHARPOOL
 
     def get_background(self, text_size: Tuple[int, int]) -> Image:
         """Generate a background image."""
@@ -82,20 +69,14 @@ class CAPTCHA:
 
         return b64image
 
-    def create(self, length=None, digits=None) -> CaptchaHash:
+    def create(self, length=None, digits=None) -> str:
         """Create a new CAPTCHA dict and add it to self.captchas"""
         length = self.config['CAPTCHA_LENGTH'] if length is None else length
         digits = self.config['CAPTCHA_DIGITS'] if digits is None else digits
 
-        self.cleanup_old_hashes()
-
-        text = ''.join([random.choice(self.characters) for i in range(length)])
-        text = text.upper()
-
-        # Concatenate the unique salt with the text and secret key to generate the hash
-        c_key = text + self.config['SECRET_CAPTCHA_KEY'] + self.unique_salt
-        c_hash = generate_password_hash(c_key, method=self.config['METHOD'])
-        unique_id = str(uuid4())
+        text = gen_captcha_text(
+            length=length, digits=digits, charpool=self.characters
+        )
 
         size = 30
         width, height = length * size, size
@@ -130,74 +111,53 @@ class CAPTCHA:
         out = background.resize((200, 60))
         out = self.draw_lines(out)
 
-        # Generate unique hash
-        captcha_hash = CaptchaHash(
-            c_hash=gen_captcha_key(
-                self.unique_salt,
+        return {
+            'img': self.convert_b64img(out),
+            'text': text,
+            'hash': jwtencode(
                 text,
                 self.config['SECRET_CAPTCHA_KEY'],
-                self.config['METHOD'],
+                self.config['EXPIRE_MINUTES'],
             ),
-            b64img=self.convert_b64img(out),
-            text=text,
-            unique_salt=self.unique_salt,
-            secret_key=self.config['SECRET_CAPTCHA_KEY'],
-            method=self.config['METHOD'],
-            expires_minutes=self.config['EXPIRE_MINUTES'],
-        )
+        }
 
-        self.captchas[captcha_hash.uuid] = captcha_hash
-
-        return captcha_hash
-
-    def verify(self, c_text: str, c_hash: str) -> bool:
+    def verify(self, token: str, c_text: str) -> bool:
         """Verify CAPTCHA response. Return True if valid, False if invalid.
 
         Args:
+            token (str): The JWT token for the CAPTCHA.
             c_text (str): The CAPTCHA text to verify.
-            c_hash (str): The CAPTCHA uuid to verify (NOT THE HASH).
 
         Returns:
             bool: True if valid, False if invalid.
         """
-        if c_hash not in self.captchas:
-            return False
+        decoded_text = jwtdecode(token, self.config['SECRET_CAPTCHA_KEY'])
+        return str(decoded_text).upper() == str(c_text).upper()
 
-        captcha_hash: CaptchaHash = self.captchas[c_hash]
-        if captcha_hash.expired():
-            del self.captchas[c_hash]
-            return False
+    def captcha_html(self, img: str, jwt_str: str) -> str:
+        """
+        Generate HTML for the CAPTCHA image and input fields.
 
-        if check_password_hash(
-            captcha_hash.hash,
-            self.unique_salt + c_text + self.config['SECRET_CAPTCHA_KEY'],
-        ):
-            del self.captchas[c_hash]
-            return True
+        Args:
+            b64img (str): Base64 encoded CAPTCHA image.
+            jwt_str (str): JWT string representing the CAPTCHA.
 
-        return False
-
-    def captcha_html(self, captcha: CaptchaHash):
+        Returns:
+            str: HTML string containing the CAPTCHA image and input fields.
+        """
         img = (
             '<img class="simple-captcha-img" '
-            + 'src="data:image/png;base64, %s" />' % captcha.b64img
+            + 'src="data:image/png;base64, %s" />' % img
         )
 
         inpu = (
             '<input type="text" class="simple-captcha-text"'
             + 'name="captcha-text">\n'
             + '<input type="hidden" name="captcha-hash" '
-            + 'value="%s">' % captcha.uuid
+            + 'value="%s">' % jwt_str
         )
 
         return '%s\n%s' % (img, inpu)
-
-    def cleanup_old_hashes(self) -> dict:
-        """Remove old CAPTCHA hashes from self.captchas."""
-        now = datetime.now()
-        for k, v in self.captchas.copy().items():
-            if now >= v.expires:
-                del self.captchas[k]
 
     def init_app(self, app):
         app.jinja_env.globals.update(captcha_html=self.captcha_html)
@@ -206,22 +166,3 @@ class CAPTCHA:
 
     def __repr__(self):
         return default_repr(self)
-
-
-def gen_captcha_key(
-    unique_salt: str, text: str, secret_key: str, method: str
-) -> str:
-    """Generate a CAPTCHA key.
-
-    Args:
-        unique_salt (str): Unique salt for the CAPTCHA.
-        text (str): CAPTCHA text.
-        secret_key (str): Secret key for the CAPTCHA.
-        method (str): Hashing method.
-
-    Returns:
-        str: CAPTCHA key.
-    """
-    return generate_password_hash(
-        unique_salt + text + secret_key, method=method
-    )
