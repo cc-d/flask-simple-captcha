@@ -1,5 +1,7 @@
 # Flask Simple CAPTCHA
 
+CURRENT VERSION: **v2.2.0**
+
 A simple CAPTCHA solution for Flask applications. Generate and validate CAPTCHAs to protect your forms from bots. Does not require server-side sessions packages.
 
 ## Features
