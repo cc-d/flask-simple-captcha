@@ -2,7 +2,7 @@
 
 ### CURRENT VERSION: **v3.0.0**
 
-`flask-simple-captcha` is a robust CAPTCHA generator class that allows for the creation and verification of CAPTCHAs. This class allows for easy integration into various Flask applications. This library leverages Pillow for image rendering and UUID for unique identification.
+`flask-simple-captcha` is a robust CAPTCHA generator class that allows for the creation and verification of CAPTCHAs. This class allows for easy integration into various Flask applications.
 
 ## Features
 
