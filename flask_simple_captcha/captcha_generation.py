@@ -24,6 +24,8 @@ class CAPTCHA:
         self.config = {**DEFAULT_CONFIG, **config}
         self.characters = CHARPOOL
 
+        self.verified_captchas = set()
+
     def get_background(self, text_size: Tuple[int, int]) -> Image:
         """Generate a background image."""
         return Image.new(
@@ -121,40 +123,50 @@ class CAPTCHA:
             ),
         }
 
-    def verify(self, token: str, c_text: str) -> bool:
+    def verify(self, c_text: str, c_hash: str) -> bool:
         """Verify CAPTCHA response. Return True if valid, False if invalid.
 
         Args:
-            token (str): The JWT token for the CAPTCHA.
             c_text (str): The CAPTCHA text to verify.
+            c_hash (str): The jwt to verify (from the hidden input field)
 
         Returns:
             bool: True if valid, False if invalid.
         """
-        decoded_text = jwtdecode(token, self.config['SECRET_CAPTCHA_KEY'])
-        return str(decoded_text).upper() == str(c_text).upper()
+        if c_hash in self.verified_captchas:
+            return False
 
-    def captcha_html(self, img: str, jwt_str: str) -> str:
+        # handle parameter reversed order
+        if len(c_text.split('.')) == 3:
+            # jwt was passed as 1st arg correct
+            c_text, c_hash = c_hash, c_text
+
+        decoded_text = jwtdecode(c_hash, self.config['SECRET_CAPTCHA_KEY'])
+        if str(decoded_text).upper() == str(c_text).upper():
+            self.verified_captchas.add(c_hash)
+            return True
+        return False
+
+    def captcha_html(self, captcha: dict) -> str:
         """
         Generate HTML for the CAPTCHA image and input fields.
 
         Args:
-            b64img (str): Base64 encoded CAPTCHA image.
-            jwt_str (str): JWT string representing the CAPTCHA.
+            captcha (dict): captcha dict with hash/img keys
 
         Returns:
             str: HTML string containing the CAPTCHA image and input fields.
         """
         img = (
             '<img class="simple-captcha-img" '
-            + 'src="data:image/png;base64, %s" />' % img
+            + 'src="data:image/png;base64, %s" />' % captcha['img']
         )
 
         inpu = (
             '<input type="text" class="simple-captcha-text"'
             + 'name="captcha-text">\n'
             + '<input type="hidden" name="captcha-hash" '
-            + 'value="%s">' % jwt_str
+            + 'value="%s">' % captcha['hash']
         )
 
         return '%s\n%s' % (img, inpu)

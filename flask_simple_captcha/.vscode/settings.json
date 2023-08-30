@@ -1,6 +1,0 @@
-{
-    "python.analysis.extraPaths": [
-        "../venv/lib/python3.7/site-packages",
-        "venv/lib/python3.7/site-packages",
-    ]
-}

@@ -1,17 +1,20 @@
+### Updated README.md
+
+```markdown
 # flask-simple-captcha
 
-### CURRENT VERSION: **v3.0.0**
+### CURRENT VERSION: **v4.0.0**
 
-`flask-simple-captcha` is a robust CAPTCHA generator class that allows for the creation and verification of CAPTCHAs. This class allows for easy integration into various Flask applications.
+`flask-simple-captcha` is a robust CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 
 ## Features
 
 - Generates CAPTCHAs with customizable length and characters
-- Easy integration with various Flask applications
+- Easy integration with Flask applications
 - Built-in image rendering and line drawing for added complexity
-- Base64 image encoding for easy embedding
+- Base64 image encoding for easy embedding into HTML
 - JWT-based verification for secure CAPTCHA checks
-- Does not require server-side sessions
+- Successfully submitted CAPTCHAs are stored in-memory to prevent resubmission
 - Backwards compatible with 1.0 versions of this package
 
 ## Prerequisites
@@ -21,13 +24,13 @@
 
 ## Installation
 
-You can use this package by directly importing it into your Flask project. Ensure that all dependencies are installed in your environment.
+Import this package directly into your Flask project and make sure to install all dependencies.
 
 ## How to Use
 
 ### Initialization
 
-Add this to the top of your code:
+Add this code snippet at the top of your application:
 
 ```python
 from flask_simple_captcha import CAPTCHA
@@ -37,13 +40,13 @@ app = SIMPLE_CAPTCHA.init_app(app)
 
 ### Protecting a Route
 
-For each route you want captcha protected, add the following code:
+To add CAPTCHA protection to a route, use the following code:
 
 ```python
 @app.route('/example', methods=['GET','POST'])
 def example():
     if request.method == 'GET':
-        captcha = CAPTCHA.create()
+        captcha = SIMPLE_CAPTCHA.create()
         render_template('example.html', captcha=captcha)
     if request.method == 'POST':
         c_hash = request.form.get('captcha-hash')
@@ -54,7 +57,7 @@ def example():
             return 'failed captcha'
 ```
 
-In the HTML forms, use:
+In your HTML template, include the following:
 
 ```html
 <!-- your_template.html -->
@@ -81,12 +84,23 @@ pip install -r requirements_dev.txt
 python3 tests.py
 ```
 
+If one wishes to test using a submitted captcha, run the following command:
+
+```bash
+python3 debug_flask_server
+```
+
+
+
 ## Contributing
 
-Just open a PR. This project was abandoned for years, but as of these most recent commits, has actual quality code but I sunk a weekend into it.
+Feel free to open a PR. The project has undergone a recent overhaul to improve the code quality.
 
 ## License
 
 MIT
 
-ccarterdev@gmail.com contact me if you think you will pay me more than i'm being paid currently
+ccarterdev@gmail.com
+```
+
+I've updated the README.md to reflect your new code. I removed any mention of server-side sessions and stated that successfully submitted CAPTCHAs are stored in-memory to prevent resubmission. I've also updated the 'How to Use' section to match your updated CAPTCHA class usage.
