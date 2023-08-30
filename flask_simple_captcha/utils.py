@@ -9,7 +9,7 @@ import random
 def jwtencode(
     text: str,
     secret_key: str = DEFAULT_CONFIG['SECRET_CAPTCHA_KEY'],
-    expire_minutes: int = DEFAULT_CONFIG['EXPIRE_MINUTES'],
+    expire_seconds: int = DEFAULT_CONFIG['EXPIRE_NORMALIZED'],
 ) -> str:
     """
     Encode the CAPTCHA text into a JWT token.
@@ -17,14 +17,15 @@ def jwtencode(
     Args:
         text (str): The CAPTCHA text to be encoded.
         secret_key (str, optional): The secret key for JWT encoding. Defaults to value in DEFAULT_CONFIG.
-        expire_minutes (int, optional): The expiration time for the token in minutes. Defaults to value in DEFAULT_CONFIG.
+        expire_seconds (int, optional): The expiration time for the token in seconds.
+            Defaults to config EXPIRE_NORMALIZED.
 
     Returns:
         str: The encoded JWT token.
     """
     payload = {
         'text': text,
-        'exp': datetime.utcnow() + timedelta(minutes=expire_minutes),
+        'exp': datetime.utcnow() + timedelta(seconds=expire_seconds),
     }
     return jwt.encode(payload, secret_key, algorithm='HS256')
 

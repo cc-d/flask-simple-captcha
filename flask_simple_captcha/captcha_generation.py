@@ -26,6 +26,15 @@ class CAPTCHA:
 
         self.verified_captchas = set()
 
+        if 'EXPIRE_NORMALIZED' not in self.config:
+            if (
+                'EXPIRE_MINUTES' in self.config
+                and 'EXPIRE_SECONDS' not in self.config
+            ):
+                self.config['EXPIRE_NORMALIZED'] = self.config['EXPIRE_MINUTES'] * 60
+            else:
+                self.config['EXPIRE_NORMALIZED'] = self.config['EXPIRE_SECONDS']
+
     def get_background(self, text_size: Tuple[int, int]) -> Image:
         """Generate a background image."""
         return Image.new(
@@ -119,7 +128,7 @@ class CAPTCHA:
             'hash': jwtencode(
                 text,
                 self.config['SECRET_CAPTCHA_KEY'],
-                self.config['EXPIRE_MINUTES'],
+                expire_seconds=self.config['EXPIRE_NORMALIZED'],
             ),
         }
 

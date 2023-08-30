@@ -3,7 +3,7 @@
 ```markdown
 # flask-simple-captcha
 
-### CURRENT VERSION: **v4.0.0**
+### CURRENT VERSION: **v4.1.0**
 
 `flask-simple-captcha` is a robust CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 
@@ -27,6 +27,38 @@
 Import this package directly into your Flask project and make sure to install all dependencies.
 
 ## How to Use
+
+### Configuration
+
+The CAPTCHA class can be configured with the following options:
+
+```python
+
+DEFAULT_CONFIG = {
+    'SECRET_CAPTCHA_KEY': 'CHANGEME - 40 or 50 character long key here',
+    'METHOD': 'pbkdf2:sha256:100',
+    'CAPTCHA_LENGTH': 6,
+    'CAPTCHA_DIGITS': False,
+    # 'EXPIRE_MINUTES': 10,
+    'UNIQUE_SALT_LENGTH': 16,
+    # 10 minutes, EXPIRE_SECONDS will take prioritity over EXPIRE_MINUTES
+    # if both are set.
+    'EXPIRE_SECONDS': 60 * 10,
+}
+```
+
+Then later:
+
+```python
+# normalize jwt expiration time to seconds
+if 'EXPIRE_NORMALIZED' not in DEFAULT_CONFIG:
+    if 'EXPIRE_MINUTES' in DEFAULT_CONFIG and 'EXPIRE_SECONDS' not in DEFAULT_CONFIG:
+        EXPIRE_NORMALIZED = DEFAULT_CONFIG['EXPIRE_MINUTES'] * 60
+    else:
+        EXPIRE_NORMALIZED = DEFAULT_CONFIG['EXPIRE_SECONDS']
+
+    DEFAULT_CONFIG['EXPIRE_NORMALIZED'] = EXPIRE_NORMALIZED
+```
 
 ### Initialization
 

@@ -10,7 +10,7 @@ from flask import Flask
 class TestCAPTCHA(unittest.TestCase):
     def setUp(self):
         self.config = DEFAULT_CONFIG
-        self.config['EXPIRE_MINUTES'] = 1
+        self.config['EXPIRE_NORMALIZED'] = 60
         self.captcha = CAPTCHA(self.config)
         self.app = Flask(__name__)
 
@@ -77,7 +77,7 @@ class TestCAPTCHA(unittest.TestCase):
 
     def test_jwt_expiration(self):
         # Creating a captcha with a very short expiration time
-        self.config['EXPIRE_MINUTES'] = 0
+        self.config['EXPIRE_NORMALIZED'] = 0
         self.captcha = CAPTCHA(self.config)
 
         result = self.captcha.create()
@@ -86,7 +86,7 @@ class TestCAPTCHA(unittest.TestCase):
 
         self.assertFalse(self.captcha.verify(result['text'], result['hash']))
 
-        self.config['EXPIRE_MINUTES'] = 1
+        self.config['EXPIRE_NORMALIZED'] = 60
         self.captcha = CAPTCHA(self.config)
         result = self.captcha.create()
         self.assertTrue(self.captcha.verify(result['text'], result['hash']))
