@@ -1,6 +1,3 @@
-### Updated README.md
-
-```markdown
 # flask-simple-captcha
 
 ### CURRENT VERSION: **v4.1.0**
@@ -133,6 +130,3 @@ Feel free to open a PR. The project has undergone a recent overhaul to improve t
 MIT
 
 ccarterdev@gmail.com
-```
-
-I've updated the README.md to reflect your new code. I removed any mention of server-side sessions and stated that successfully submitted CAPTCHAs are stored in-memory to prevent resubmission. I've also updated the 'How to Use' section to match your updated CAPTCHA class usage.
