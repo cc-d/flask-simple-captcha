@@ -91,6 +91,18 @@ class TestCAPTCHA(unittest.TestCase):
         result = self.captcha.create()
         self.assertTrue(self.captcha.verify(result['text'], result['hash']))
 
+    def test_arg_order(self):
+        result = self.captcha.create()
+        text = result['text']
+        c_hash = result['hash']
+
+        self.assertTrue(self.captcha.verify(c_hash, text))
+
+        result = self.captcha.create()
+        text = result['text']
+        c_hash = result['hash']
+        self.assertTrue(self.captcha.verify(text, c_hash))
+
 
 if __name__ == '__main__':
     unittest.main()
