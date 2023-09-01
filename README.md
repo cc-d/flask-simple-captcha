@@ -1,6 +1,6 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v4.1.0**
+### CURRENT VERSION: **v4.1.2**
 
 `flask-simple-captcha` is a robust CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 
@@ -27,13 +27,9 @@ Import this package directly into your Flask project and make sure to install al
 
 ### Configuration
 
-The CAPTCHA class can be configured with the following options:
-
 ```python
-
 DEFAULT_CONFIG = {
     'SECRET_CAPTCHA_KEY': 'CHANGEME - 40 or 50 character long key here',
-    'METHOD': 'pbkdf2:sha256:100',
     'CAPTCHA_LENGTH': 6,
     'CAPTCHA_DIGITS': False,
     # 'EXPIRE_MINUTES': 10,
@@ -42,18 +38,10 @@ DEFAULT_CONFIG = {
     # if both are set.
     'EXPIRE_SECONDS': 60 * 10,
 }
-```
 
-Then later:
-
-```python
-# normalize jwt expiration time to seconds
+# Normalize jwt expiration time to seconds
 if 'EXPIRE_NORMALIZED' not in DEFAULT_CONFIG:
-    if 'EXPIRE_MINUTES' in DEFAULT_CONFIG and 'EXPIRE_SECONDS' not in DEFAULT_CONFIG:
-        EXPIRE_NORMALIZED = DEFAULT_CONFIG['EXPIRE_MINUTES'] * 60
-    else:
-        EXPIRE_NORMALIZED = DEFAULT_CONFIG['EXPIRE_SECONDS']
-
+    EXPIRE_NORMALIZED = DEFAULT_CONFIG.get('EXPIRE_SECONDS', 60 * 10)
     DEFAULT_CONFIG['EXPIRE_NORMALIZED'] = EXPIRE_NORMALIZED
 ```
 
@@ -69,14 +57,14 @@ app = SIMPLE_CAPTCHA.init_app(app)
 
 ### Protecting a Route
 
-To add CAPTCHA protection to a route, use the following code:
+To add CAPTCHA protection to a route, you can use the following code:
 
 ```python
 @app.route('/example', methods=['GET','POST'])
 def example():
     if request.method == 'GET':
-        captcha = SIMPLE_CAPTCHA.create()
-        render_template('example.html', captcha=captcha)
+        new_captcha_dict = SIMPLE_CAPTCHA.create()
+        render_template('example.html', captcha=new_captcha_dict)
     if request.method == 'POST':
         c_hash = request.form.get('captcha-hash')
         c_text = request.form.get('captcha-text')
@@ -86,18 +74,26 @@ def example():
             return 'failed captcha'
 ```
 
-In your HTML template, include the following:
+In your HTML template, you need to wrap the CAPTCHA inputs within a form element. The package will only generate the CAPTCHA inputs but not the surrounding form or the submit button.
 
 ```html
 <!-- your_template.html -->
-<div class="captcha-container">{{ captcha_html|safe }}</div>
+<form action="/example" method="post">
+  {{ captcha_html(captcha)|safe }}
+  <input type="submit" value="Submit">
+</form>
 ```
 
-## License
+## Debugging
 
-MIT
+You can run `debug_flask_server.py` for minimal testing on port `5000`. This allows you to test the generated CAPTCHA HTML and submission behavior.
 
----
+```bash
+# Might want to use venv
+pip3 install -r requirements_dev.txt
+
+python3 debug_flask_server.py
+```
 
 ## Running Tests
 
@@ -113,13 +109,11 @@ pip install -r requirements_dev.txt
 python3 tests.py
 ```
 
-If one wishes to test using a submitted captcha, run the following command:
+or
 
 ```bash
-python3 debug_flask_server
+python3 -m unittest tests.py
 ```
-
-
 
 ## Contributing
 
@@ -129,4 +123,4 @@ Feel free to open a PR. The project has undergone a recent overhaul to improve t
 
 MIT
 
-ccarterdev@gmail.com
+Contact: ccarterdev@gmail.com
