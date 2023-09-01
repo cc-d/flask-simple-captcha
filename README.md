@@ -1,6 +1,6 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v4.1.2**
+### CURRENT VERSION: **v4.1.3**
 
 `flask-simple-captcha` is a robust CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 
@@ -17,7 +17,10 @@
 ## Prerequisites
 
 - Python 3.7 or higher
-- Pillow library for image manipulation
+- Werkzeug >=0.16.0, <3
+- Pillow >6, <9
+- myfuncs >=1.4.8
+
 
 ## Installation
 
