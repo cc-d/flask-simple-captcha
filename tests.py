@@ -1,10 +1,20 @@
 import unittest
 import time
-from unittest.mock import patch, Mock
+import jwt
+import string
+from datetime import datetime, timedelta
+from unittest.mock import patch, Mock, MagicMock
 from flask_simple_captcha import CAPTCHA
 from PIL import Image
 from flask_simple_captcha.config import DEFAULT_CONFIG
 from flask import Flask
+from flask_simple_captcha.utils import (
+    jwtencode,
+    jwtdecode,
+    gen_captcha_text,
+    exclude_similar_chars,
+    CHARPOOL,
+)
 
 
 class TestCAPTCHA(unittest.TestCase):
@@ -102,6 +112,81 @@ class TestCAPTCHA(unittest.TestCase):
         text = result['text']
         c_hash = result['hash']
         self.assertTrue(self.captcha.verify(text, c_hash))
+
+    def test_backwards_defaults(self):
+        """ensures backward compatibility with v1.0 default assumptions"""
+        for i in range(5):
+            result = self.captcha.create()
+            for c in result['text']:
+                self.assertIn(c, string.ascii_uppercase)
+
+
+class TestCaptchaUtils(unittest.TestCase):
+    def test_jwtencode(self):
+        token = jwtencode("my_text", expire_seconds=100)
+        decoded_payload = jwt.decode(
+            token, DEFAULT_CONFIG['SECRET_CAPTCHA_KEY'], algorithms=['HS256']
+        )
+        self.assertAlmostEqual(
+            int(decoded_payload['exp']), int(time.time() + 100)
+        )
+        self.assertEqual(decoded_payload['text'], "my_text")
+
+    def test_jwtdecode_valid_token(self):
+        token = jwtencode("my_text")
+        decoded_text = jwtdecode(token)
+        self.assertEqual(decoded_text, "my_text")
+
+    def test_jwtdecode_invalid_token(self):
+        expired_token = jwt.encode(
+            {
+                'text': 'my_text',
+                'exp': datetime.utcnow() - timedelta(seconds=10),
+            },
+            DEFAULT_CONFIG['SECRET_CAPTCHA_KEY'],
+            algorithm='HS256',
+        )
+        self.assertIsNone(jwtdecode(expired_token))
+
+        invalid_token = "invalid.token.here"
+        self.assertIsNone(jwtdecode(invalid_token))
+
+    def test_exclude_similar_chars(self):
+        self.assertEqual(exclude_similar_chars("oOlI1A"), "A")
+
+    def test_gen_captcha_text(self):
+        deftext = gen_captcha_text()
+
+        for c in deftext:
+            self.assertIn(c, CHARPOOL)
+            self.assertTrue(c.upper() == c)
+            self.assertTrue(c in string.ascii_uppercase)
+
+        # LENGTH / Pool / Add Digits / Only Uppercase
+        AaDigits_text = gen_captcha_text(
+            length=500, charpool="Aa", add_digits=True, only_uppercase=True
+        )
+
+        aachars = tuple(set('A' + string.digits))
+
+        self.assertTrue(AaDigits_text.isalnum())
+        self.assertTrue(AaDigits_text.isupper())
+
+        for c in AaDigits_text:
+            self.assertIn(c, aachars)
+
+        self.assertTrue(len(AaDigits_text) == 500)
+
+        # only uppercase behaviour
+        oa_text = gen_captcha_text(
+            length=100, charpool='Aa', only_uppercase=False
+        )
+        for c in oa_text:
+            self.assertIn(c, 'Aa')
+
+        oa_text = gen_captcha_text(length=100, charpool='Aa')
+        for c in oa_text:
+            self.assertIn(c, 'Aa')
 
 
 if __name__ == '__main__':

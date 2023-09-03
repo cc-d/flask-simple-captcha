@@ -1,6 +1,6 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v4.1.3**
+### CURRENT VERSION: **v4.2.0**
 
 `flask-simple-captcha` is a robust CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 
@@ -13,6 +13,9 @@
 - JWT-based verification for secure CAPTCHA checks
 - Successfully submitted CAPTCHAs are stored in-memory to prevent resubmission
 - Backwards compatible with 1.0 versions of this package
+- Avoids visually similar characters by default
+- Supports custom character set provided by user
+- Casing of submitted captcha is ignored by default
 
 ## Prerequisites
 
@@ -32,20 +35,16 @@ Import this package directly into your Flask project and make sure to install al
 
 ```python
 DEFAULT_CONFIG = {
-    'SECRET_CAPTCHA_KEY': 'CHANGEME - 40 or 50 character long key here',
-    'CAPTCHA_LENGTH': 6,
-    'CAPTCHA_DIGITS': False,
-    # 'EXPIRE_MINUTES': 10,
-    'UNIQUE_SALT_LENGTH': 16,
-    # 10 minutes, EXPIRE_SECONDS will take prioritity over EXPIRE_MINUTES
-    # if both are set.
+    'SECRET_CAPTCHA_KEY': 'LONG SECRET KEY HERE',  # use for JWT encoding/decoding
+    'CAPTCHA_LENGTH': 6,  # Length of the generated CAPTCHA text
+    'CAPTCHA_DIGITS': False,  # Should digits be added to the character pool?
+    # EXPIRE_SECONDS will take prioritity over EXPIRE_MINUTES if both are set.
     'EXPIRE_SECONDS': 60 * 10,
+    #'EXPIRE_MINUTES': 10, # backwards compatibility concerns supports this too
+    #'EXCLUDE_VISUALLY_SIMILAR': True,  # Optional
+    #'ONLY_UPPERCASE': True,  # Optional
+    #'CHARACTER_POOL': 'AaBb',  # Optional
 }
-
-# Normalize jwt expiration time to seconds
-if 'EXPIRE_NORMALIZED' not in DEFAULT_CONFIG:
-    EXPIRE_NORMALIZED = DEFAULT_CONFIG.get('EXPIRE_SECONDS', 60 * 10)
-    DEFAULT_CONFIG['EXPIRE_NORMALIZED'] = EXPIRE_NORMALIZED
 ```
 
 ### Initialization

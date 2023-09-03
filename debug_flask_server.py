@@ -2,9 +2,11 @@ from flask import Flask, request, render_template_string
 from flask_simple_captcha import CAPTCHA, DEFAULT_CONFIG
 
 app = Flask(__name__)
-app.config['CAPTCHA_CONFIG'] = DEFAULT_CONFIG
+test_config = DEFAULT_CONFIG.copy()
 
-CAPTCHA = CAPTCHA(config=app.config['CAPTCHA_CONFIG'])
+
+print(test_config)
+CAPTCHA = CAPTCHA(config=test_config)
 app = CAPTCHA.init_app(app)
 
 

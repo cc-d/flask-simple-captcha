@@ -10,10 +10,16 @@ from PIL import Image, ImageDraw, ImageFont
 from typing import Tuple
 from uuid import uuid4
 from werkzeug.security import check_password_hash, generate_password_hash
-from .config import DEFAULT_CONFIG
+from .config import DEFAULT_CONFIG, EXPIRE_NORMALIZED
 from myfuncs import default_repr
 
-from .utils import jwtencode, jwtdecode, CHARPOOL, gen_captcha_text
+from .utils import (
+    jwtencode,
+    jwtdecode,
+    gen_captcha_text,
+    CHARPOOL,
+    exclude_similar_chars,
+)
 
 
 class CAPTCHA:
@@ -22,18 +28,47 @@ class CAPTCHA:
     def __init__(self, config: dict):
         """Initialize CAPTCHA with default configuration."""
         self.config = {**DEFAULT_CONFIG, **config}
-        self.characters = CHARPOOL
 
         self.verified_captchas = set()
+        self.secret = self.config['SECRET_CAPTCHA_KEY']
 
-        if 'EXPIRE_NORMALIZED' not in self.config:
-            if (
-                'EXPIRE_MINUTES' in self.config
-                and 'EXPIRE_SECONDS' not in self.config
-            ):
-                self.config['EXPIRE_NORMALIZED'] = self.config['EXPIRE_MINUTES'] * 60
-            else:
-                self.config['EXPIRE_NORMALIZED'] = self.config['EXPIRE_SECONDS']
+        if 'EXPIRE_NORMALIZED' in self.config:
+            self.expire_secs = self.config['EXPIRE_NORMALIZED']
+        elif 'EXPIRE_SECONDS' in self.config:
+            self.expire_secs = self.config['EXPIRE_SECONDS']
+        elif (
+            'EXPIRE_MINUTES' in self.config
+            and 'EXPIRE_SECONDS' not in self.config
+        ):
+            self.expire_secs = self.config['EXPIRE_MINUTES'] * 60
+        else:
+            self.expire_secs = EXPIRE_NORMALIZED
+
+        if 'CHARACTER_POOL' in self.config:
+            chars = self.config['CHARACTER_POOL']
+        else:
+            chars = ''.join(CHARPOOL)
+
+        if (
+            'ONLY_UPPERCASE' in self.config
+            and self.config['ONLY_UPPERCASE'] is False
+        ):
+            chars = ''.join(set(c for c in chars))
+            self.only_upper = False
+        else:
+            chars = ''.join(set(c.upper() for c in chars))
+            self.only_upper = True
+
+        if self.config['CAPTCHA_DIGITS']:
+            chars += string.digits
+
+        if (
+            'EXCLUDE_VISUALLY_SIMILAR' not in self.config
+            or self.config['EXCLUDE_VISUALLY_SIMILAR']
+        ):
+            chars = exclude_similar_chars(chars)
+
+        self.characters = tuple(set(chars))
 
     def get_background(self, text_size: Tuple[int, int]) -> Image:
         """Generate a background image."""
@@ -83,10 +118,10 @@ class CAPTCHA:
     def create(self, length=None, digits=None) -> str:
         """Create a new CAPTCHA dict and add it to self.captchas"""
         length = self.config['CAPTCHA_LENGTH'] if length is None else length
-        digits = self.config['CAPTCHA_DIGITS'] if digits is None else digits
+        add_digits = self.config['CAPTCHA_DIGITS'] if digits is None else digits
 
         text = gen_captcha_text(
-            length=length, digits=digits, charpool=self.characters
+            length=length, add_digits=add_digits, charpool=self.characters
         )
 
         size = 30
@@ -126,9 +161,7 @@ class CAPTCHA:
             'img': self.convert_b64img(out),
             'text': text,
             'hash': jwtencode(
-                text,
-                self.config['SECRET_CAPTCHA_KEY'],
-                expire_seconds=self.config['EXPIRE_NORMALIZED'],
+                text, self.secret, expire_seconds=self.expire_secs
             ),
         }
 
@@ -142,16 +175,24 @@ class CAPTCHA:
         Returns:
             bool: True if valid, False if invalid.
         """
-        if c_hash in self.verified_captchas:
-            return False
-
         # handle parameter reversed order
         if len(c_text.split('.')) == 3:
             # jwt was passed as 1st arg correct
             c_text, c_hash = c_hash, c_text
 
+        if c_hash in self.verified_captchas:
+            return False
+
         decoded_text = jwtdecode(c_hash, self.config['SECRET_CAPTCHA_KEY'])
-        if str(decoded_text).upper() == str(c_text).upper():
+
+        # token expired or invalid
+        if decoded_text is None:
+            return False
+
+        if self.only_upper:
+            decoded_text, c_text = decoded_text.upper(), c_text.upper()
+
+        if decoded_text == c_text:
             self.verified_captchas.add(c_hash)
             return True
         return False
