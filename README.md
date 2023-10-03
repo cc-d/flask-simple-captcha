@@ -1,6 +1,6 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v4.2.0**
+### CURRENT VERSION: **v4.2.1**
 
 `flask-simple-captcha` is a robust CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 
