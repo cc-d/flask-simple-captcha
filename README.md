@@ -1,8 +1,8 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v5.0.0**
+### CURRENT VERSION: **v5.0.2**
 
-**v5.0.0 added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
+**v5.0.0+ added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
 
 
 `flask-simple-captcha` is a robust CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.

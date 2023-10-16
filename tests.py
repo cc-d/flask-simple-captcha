@@ -5,13 +5,14 @@ import string
 from datetime import datetime, timedelta
 from unittest.mock import patch, Mock, MagicMock
 
+from flask import Flask
+
 from PIL import Image
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask_simple_captcha import CAPTCHA
 
 from flask_simple_captcha.config import DEFAULT_CONFIG
-from flask import Flask
 from flask_simple_captcha.utils import (
     jwtencrypt,
     jwtdecrypt,
