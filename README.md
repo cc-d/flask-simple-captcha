@@ -1,8 +1,13 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v4.2.1**
+### CURRENT VERSION: **v5.0.0**
+
+**v5.0.0 added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
+
 
 `flask-simple-captcha` is a robust CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
+
+See the encryption / decryption breakdown below for more information on the verification mechanism.
 
 ## Features
 
@@ -10,7 +15,7 @@
 - Easy integration with Flask applications
 - Built-in image rendering and line drawing for added complexity
 - Base64 image encoding for easy embedding into HTML
-- JWT-based verification for secure CAPTCHA checks
+- Uses JWTs and Werkzeug password hashing for secure CAPTCHA verification
 - Successfully submitted CAPTCHAs are stored in-memory to prevent resubmission
 - Backwards compatible with 1.0 versions of this package
 - Avoids visually similar characters by default
@@ -116,6 +121,47 @@ or
 ```bash
 python3 -m unittest tests.py
 ```
+
+## Encryption and Decryption Breakdown
+
+Uses a combination of JWTs and Werkzeug's password hashing to encrypt and decrypt CAPTCHA text.
+
+### Encryption
+
+1. **Salting the Text**: The CAPTCHA text is salted by appending the secret key at the beginning.
+    ```python
+    salted_text = secret_key + text
+    ```
+2. **Hashing**: Werkzeug's `generate_password_hash` function is then used to hash the salted CAPTCHA text.
+    ```python
+    hashed_text = generate_password_hash(salted_text)
+    ```
+3. **Creating JWT Token**: A JWT token is generated using the hashed CAPTCHA text and an optional expiration time.
+    ```python
+    payload = {
+        'hashed_text': hashed_text,
+        'exp': datetime.utcnow() + timedelta(seconds=expire_seconds),
+    }
+    return jwt.encode(payload, secret_key, algorithm='HS256')
+    ```
+
+### Decryption
+
+1. **Decode JWT Token**: The JWT token is decoded using the secret key. If the token is invalid or expired, the decryption process will fail.
+    ```python
+    decoded = jwt.decode(token, secret_key, algorithms=['HS256'])
+    ```
+2. **Extract Hashed Text**: The hashed CAPTCHA text is extracted from the decoded JWT payload.
+    ```python
+    hashed_text = decoded['hashed_text']
+    ```
+3. **Verifying the Hash**: Werkzeug's `check_password_hash` function is used to verify that the hashed CAPTCHA text matches the original salted CAPTCHA text.
+    ```python
+    salted_original_text = secret_key + original_text
+    if check_password_hash(hashed_text, salted_original_text):
+        return original_text
+    ```
+
 
 ## Contributing
 

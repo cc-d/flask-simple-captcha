@@ -4,17 +4,25 @@ import jwt
 import string
 from datetime import datetime, timedelta
 from unittest.mock import patch, Mock, MagicMock
-from flask_simple_captcha import CAPTCHA
+
 from PIL import Image
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from flask_simple_captcha import CAPTCHA
+
 from flask_simple_captcha.config import DEFAULT_CONFIG
 from flask import Flask
 from flask_simple_captcha.utils import (
-    jwtencode,
-    jwtdecode,
+    jwtencrypt,
+    jwtdecrypt,
     gen_captcha_text,
     exclude_similar_chars,
     CHARPOOL,
+    hash_text,
 )
+
+_TESTTEXT = 'TestText'
+_TESTKEY = 'TestKey'
 
 
 class TestCAPTCHA(unittest.TestCase):
@@ -122,34 +130,25 @@ class TestCAPTCHA(unittest.TestCase):
 
 
 class TestCaptchaUtils(unittest.TestCase):
-    def test_jwtencode(self):
-        token = jwtencode("my_text", expire_seconds=100)
-        decoded_payload = jwt.decode(
-            token, DEFAULT_CONFIG['SECRET_CAPTCHA_KEY'], algorithms=['HS256']
-        )
-        self.assertAlmostEqual(
-            int(decoded_payload['exp']), int(time.time() + 100)
-        )
-        self.assertEqual(decoded_payload['text'], "my_text")
+    def test_jwtencrypt(self):
+        token = jwtencrypt(_TESTTEXT, _TESTKEY, expire_seconds=100)
+        decoded = jwt.decode(token, _TESTKEY, algorithms=['HS256'])
 
-    def test_jwtdecode_valid_token(self):
-        token = jwtencode("my_text")
-        decoded_text = jwtdecode(token)
-        self.assertEqual(decoded_text, "my_text")
+        self.assertAlmostEqual(int(decoded['exp']), int(time.time() + 100))
+        decrypted_text = jwtdecrypt(token, _TESTTEXT, _TESTKEY)
+        self.assertEqual(decrypted_text, _TESTTEXT)
 
-    def test_jwtdecode_invalid_token(self):
-        expired_token = jwt.encode(
-            {
-                'text': 'my_text',
-                'exp': datetime.utcnow() - timedelta(seconds=10),
-            },
-            DEFAULT_CONFIG['SECRET_CAPTCHA_KEY'],
-            algorithm='HS256',
-        )
-        self.assertIsNone(jwtdecode(expired_token))
+    def test_jwtdecrypt_valid_token(self):
+        token = jwtencrypt(_TESTTEXT)
+        decoded_text = jwtdecrypt(token, _TESTTEXT)
+        self.assertEqual(decoded_text, _TESTTEXT)
+
+    def test_jwtdecrypt_invalid_token(self):
+        expired_token = jwtencrypt(_TESTTEXT, expire_seconds=-100)
+        self.assertIsNone(jwtdecrypt(expired_token, _TESTTEXT))
 
         invalid_token = "invalid.token.here"
-        self.assertIsNone(jwtdecode(invalid_token))
+        self.assertIsNone(jwtdecrypt(invalid_token, _TESTTEXT))
 
     def test_exclude_similar_chars(self):
         self.assertEqual(exclude_similar_chars("oOlI1A"), "A")
@@ -187,6 +186,10 @@ class TestCaptchaUtils(unittest.TestCase):
         oa_text = gen_captcha_text(length=100, charpool='Aa')
         for c in oa_text:
             self.assertIn(c, 'Aa')
+
+    def test_hashed_text(self):
+        hashed_text = hash_text(_TESTTEXT, _TESTKEY)
+        self.assertTrue(check_password_hash(hashed_text, _TESTKEY + _TESTTEXT))
 
 
 if __name__ == '__main__':

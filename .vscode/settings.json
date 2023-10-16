@@ -1,5 +1,9 @@
 {
     "python.analysis.extraPaths": [
-        "../venv/lib/python3.8/site-packages"
-    ]
+        "./venv/lib/python3.7/site-packages"
+    ],
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter"
+    },
+    "python.formatting.provider": "none"
 }

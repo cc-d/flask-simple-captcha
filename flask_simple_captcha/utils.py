@@ -6,12 +6,31 @@ from typing import Optional, Union, Set, Tuple
 import jwt
 import sys
 import os
+from werkzeug.security import generate_password_hash, check_password_hash
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from config import DEFAULT_CONFIG, EXCHARS, CHARPOOL, EXPIRE_NORMALIZED
+from .config import DEFAULT_CONFIG, EXCHARS, CHARPOOL, EXPIRE_NORMALIZED
 
 
-def jwtencode(
+def hash_text(
+    text: str, secret_key: str = DEFAULT_CONFIG['SECRET_CAPTCHA_KEY']
+) -> str:
+    """
+    Encrypt the CAPTCHA text.
+
+    Args:
+        text (str): The CAPTCHA text to be encrypted.
+        secret_key (str, optional): The secret key for encryption.
+            Defaults to value in DEFAULT_CONFIG.
+
+    Returns:
+        str: The encrypted CAPTCHA text.
+    """
+    salted_text = secret_key + text
+    return generate_password_hash(salted_text)
+
+
+def jwtencrypt(
     text: str,
     secret_key: str = DEFAULT_CONFIG['SECRET_CAPTCHA_KEY'],
     expire_seconds: int = EXPIRE_NORMALIZED,
@@ -29,29 +48,44 @@ def jwtencode(
     Returns:
         str: The encoded JWT token.
     """
+    hashed_text = hash_text(text, secret_key)
     payload = {
-        'text': text,
+        'hashed_text': hashed_text,
         'exp': datetime.utcnow() + timedelta(seconds=expire_seconds),
     }
     return jwt.encode(payload, secret_key, algorithm='HS256')
 
 
-def jwtdecode(
-    token: str, secret_key: str = DEFAULT_CONFIG['SECRET_CAPTCHA_KEY']
+def jwtdecrypt(
+    token: str,
+    original_text: str,
+    secret_key: str = DEFAULT_CONFIG['SECRET_CAPTCHA_KEY'],
 ) -> Optional[str]:
     """
     Decode the CAPTCHA text from a JWT token.
 
     Args:
         token (str): The JWT token to decode.
+        original_text (str): The original CAPTCHA text.
         secret_key (str, optional): The secret key for JWT decoding.
-            Defaults to value in DEFAULT_CONFIG.
 
     Returns:
         Optional[str]: The decoded CAPTCHA text if valid, None if invalid.
     """
     try:
-        return jwt.decode(token, secret_key, algorithms=['HS256'])['text']
+        decoded = jwt.decode(token, secret_key, algorithms=['HS256'])
+        if 'hashed_text' not in decoded:
+            return None
+
+        hashed_text = decoded['hashed_text']
+        salted_original_text = secret_key + original_text
+
+        # Verify if the hashed text matches the original text
+        if check_password_hash(hashed_text, salted_original_text):
+            return original_text
+        else:
+            return None
+
     except (jwt.ExpiredSignatureError, jwt.InvalidTokenError):
         return None
 

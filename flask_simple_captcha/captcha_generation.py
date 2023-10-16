@@ -14,8 +14,8 @@ from .config import DEFAULT_CONFIG, EXPIRE_NORMALIZED
 from myfuncs import default_repr
 
 from .utils import (
-    jwtencode,
-    jwtdecode,
+    jwtencrypt,
+    jwtdecrypt,
     gen_captcha_text,
     CHARPOOL,
     exclude_similar_chars,
@@ -160,7 +160,7 @@ class CAPTCHA:
         return {
             'img': self.convert_b64img(out),
             'text': text,
-            'hash': jwtencode(
+            'hash': jwtencrypt(
                 text, self.secret, expire_seconds=self.expire_secs
             ),
         }
@@ -183,7 +183,9 @@ class CAPTCHA:
         if c_hash in self.verified_captchas:
             return False
 
-        decoded_text = jwtdecode(c_hash, self.config['SECRET_CAPTCHA_KEY'])
+        decoded_text = jwtdecrypt(
+            c_hash, c_text, self.config['SECRET_CAPTCHA_KEY']
+        )
 
         # token expired or invalid
         if decoded_text is None:
