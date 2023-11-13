@@ -118,7 +118,9 @@ class CAPTCHA:
     def create(self, length=None, digits=None) -> str:
         """Create a new CAPTCHA dict and add it to self.captchas"""
         length = self.config['CAPTCHA_LENGTH'] if length is None else length
-        add_digits = self.config['CAPTCHA_DIGITS'] if digits is None else digits
+        add_digits = (
+            self.config['CAPTCHA_DIGITS'] if digits is None else digits
+        )
 
         text = gen_captcha_text(
             length=length, add_digits=add_digits, charpool=self.characters
@@ -141,9 +143,7 @@ class CAPTCHA:
 
         text_img = Image.alpha_composite(base, txt)
 
-        text_size = fnt.getlength(text)
-        text_size = str(text_size)
-        text_size = (int(text_size[0] * 1), int(text_size[1] * 1))
+        text_size = (int(text_img.size[0] * 0.75), int(text_img.size[1] * 1))
 
         background = self.get_background(text_size)
 
