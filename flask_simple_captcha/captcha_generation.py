@@ -141,7 +141,8 @@ class CAPTCHA:
 
         text_img = Image.alpha_composite(base, txt)
 
-        text_size = fnt.getsize(text)
+        text_size = fnt.getlength(text)
+        text_size = str(text_size)
         text_size = (int(text_size[0] * 1), int(text_size[1] * 1))
 
         background = self.get_background(text_size)
