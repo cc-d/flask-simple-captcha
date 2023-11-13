@@ -12,9 +12,7 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from .config import DEFAULT_CONFIG, EXCHARS, CHARPOOL, EXPIRE_NORMALIZED
 
 
-def hash_text(
-    text: str, secret_key: str = DEFAULT_CONFIG['SECRET_CAPTCHA_KEY']
-) -> str:
+def hash_text(text: str, secret_key: str = DEFAULT_CONFIG["SECRET_CAPTCHA_KEY"]) -> str:
     """
     Encrypt the CAPTCHA text.
 
@@ -32,7 +30,7 @@ def hash_text(
 
 def jwtencrypt(
     text: str,
-    secret_key: str = DEFAULT_CONFIG['SECRET_CAPTCHA_KEY'],
+    secret_key: str = DEFAULT_CONFIG["SECRET_CAPTCHA_KEY"],
     expire_seconds: int = EXPIRE_NORMALIZED,
 ) -> str:
     """
@@ -50,16 +48,16 @@ def jwtencrypt(
     """
     hashed_text = hash_text(text, secret_key)
     payload = {
-        'hashed_text': hashed_text,
-        'exp': datetime.utcnow() + timedelta(seconds=expire_seconds),
+        "hashed_text": hashed_text,
+        "exp": datetime.utcnow() + timedelta(seconds=expire_seconds),
     }
-    return jwt.encode(payload, secret_key, algorithm='HS256')
+    return jwt.encode(payload, secret_key, algorithm="HS256")
 
 
 def jwtdecrypt(
     token: str,
     original_text: str,
-    secret_key: str = DEFAULT_CONFIG['SECRET_CAPTCHA_KEY'],
+    secret_key: str = DEFAULT_CONFIG["SECRET_CAPTCHA_KEY"],
 ) -> Optional[str]:
     """
     Decode the CAPTCHA text from a JWT token.
@@ -73,11 +71,11 @@ def jwtdecrypt(
         Optional[str]: The decoded CAPTCHA text if valid, None if invalid.
     """
     try:
-        decoded = jwt.decode(token, secret_key, algorithms=['HS256'])
-        if 'hashed_text' not in decoded:
+        decoded = jwt.decode(token, secret_key, algorithms=["HS256"])
+        if "hashed_text" not in decoded:
             return None
 
-        hashed_text = decoded['hashed_text']
+        hashed_text = decoded["hashed_text"]
         salted_original_text = secret_key + original_text
 
         # Verify if the hashed text matches the original text
@@ -102,7 +100,7 @@ def exclude_similar_chars(chars: Union[str, set, list, tuple]) -> str:
             visually confusing characters excluded.
     """
     if isinstance(chars, str):
-        return ''.join({c for c in chars if c not in EXCHARS})
+        return "".join({c for c in chars if c not in EXCHARS})
     elif isinstance(chars, set):
         return chars - set(EXCHARS)
     elif isinstance(chars, list):
@@ -153,4 +151,4 @@ def gen_captcha_text(
     if add_digits:
         charpool += tuple(set(string.digits))
 
-    return ''.join((random.choice(charpool) for _ in range(length)))
+    return "".join((random.choice(charpool) for _ in range(length)))

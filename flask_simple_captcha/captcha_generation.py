@@ -30,41 +30,35 @@ class CAPTCHA:
         self.config = {**DEFAULT_CONFIG, **config}
 
         self.verified_captchas = set()
-        self.secret = self.config['SECRET_CAPTCHA_KEY']
+        self.secret = self.config["SECRET_CAPTCHA_KEY"]
 
-        if 'EXPIRE_NORMALIZED' in self.config:
-            self.expire_secs = self.config['EXPIRE_NORMALIZED']
-        elif 'EXPIRE_SECONDS' in self.config:
-            self.expire_secs = self.config['EXPIRE_SECONDS']
-        elif (
-            'EXPIRE_MINUTES' in self.config
-            and 'EXPIRE_SECONDS' not in self.config
-        ):
-            self.expire_secs = self.config['EXPIRE_MINUTES'] * 60
+        if "EXPIRE_NORMALIZED" in self.config:
+            self.expire_secs = self.config["EXPIRE_NORMALIZED"]
+        elif "EXPIRE_SECONDS" in self.config:
+            self.expire_secs = self.config["EXPIRE_SECONDS"]
+        elif "EXPIRE_MINUTES" in self.config and "EXPIRE_SECONDS" not in self.config:
+            self.expire_secs = self.config["EXPIRE_MINUTES"] * 60
         else:
             self.expire_secs = EXPIRE_NORMALIZED
 
-        if 'CHARACTER_POOL' in self.config:
-            chars = self.config['CHARACTER_POOL']
+        if "CHARACTER_POOL" in self.config:
+            chars = self.config["CHARACTER_POOL"]
         else:
-            chars = ''.join(CHARPOOL)
+            chars = "".join(CHARPOOL)
 
-        if (
-            'ONLY_UPPERCASE' in self.config
-            and self.config['ONLY_UPPERCASE'] is False
-        ):
-            chars = ''.join(set(c for c in chars))
+        if "ONLY_UPPERCASE" in self.config and self.config["ONLY_UPPERCASE"] is False:
+            chars = "".join(set(c for c in chars))
             self.only_upper = False
         else:
-            chars = ''.join(set(c.upper() for c in chars))
+            chars = "".join(set(c.upper() for c in chars))
             self.only_upper = True
 
-        if self.config['CAPTCHA_DIGITS']:
+        if self.config["CAPTCHA_DIGITS"]:
             chars += string.digits
 
         if (
-            'EXCLUDE_VISUALLY_SIMILAR' not in self.config
-            or self.config['EXCLUDE_VISUALLY_SIMILAR']
+            "EXCLUDE_VISUALLY_SIMILAR" not in self.config
+            or self.config["EXCLUDE_VISUALLY_SIMILAR"]
         ):
             chars = exclude_similar_chars(chars)
 
@@ -73,7 +67,7 @@ class CAPTCHA:
     def get_background(self, text_size: Tuple[int, int]) -> Image:
         """Generate a background image."""
         return Image.new(
-            'RGBA',
+            "RGBA",
             (int(text_size[0] * 1.25), int(text_size[1] * 1.5)),
             color=(0, 0, 0, 255),
         )
@@ -106,7 +100,7 @@ class CAPTCHA:
 
     def convert_b64img(self, out):
         byte_array = BytesIO()
-        out.save(byte_array, format='PNG')
+        out.save(byte_array, format="PNG")
         byte_array = byte_array.getvalue()
 
         b64image = base64.b64encode(byte_array)
@@ -117,8 +111,8 @@ class CAPTCHA:
 
     def create(self, length=None, digits=None) -> str:
         """Create a new CAPTCHA dict and add it to self.captchas"""
-        length = self.config['CAPTCHA_LENGTH'] if length is None else length
-        add_digits = self.config['CAPTCHA_DIGITS'] if digits is None else digits
+        length = self.config["CAPTCHA_LENGTH"] if length is None else length
+        add_digits = self.config["CAPTCHA_DIGITS"] if digits is None else digits
 
         text = gen_captcha_text(
             length=length, add_digits=add_digits, charpool=self.characters
@@ -127,12 +121,12 @@ class CAPTCHA:
         size = 30
         width, height = length * size, size
 
-        base = Image.new('RGBA', (width, height), color=(0, 0, 0, 0))
+        base = Image.new("RGBA", (width, height), color=(0, 0, 0, 0))
 
-        txt = Image.new('RGBA', base.size, color=(0, 0, 0, 255))
+        txt = Image.new("RGBA", base.size, color=(0, 0, 0, 255))
 
         f_path = os.path.dirname(os.path.realpath(__file__))
-        f_path = os.path.join(f_path, 'arial.ttf')
+        f_path = os.path.join(f_path, "arial.ttf")
         fnt = ImageFont.truetype(f_path, size)
 
         d = ImageDraw.Draw(txt)
@@ -141,9 +135,7 @@ class CAPTCHA:
 
         text_img = Image.alpha_composite(base, txt)
 
-        text_size = fnt.getlength(text)
-        text_size = str(text_size)
-        text_size = (int(text_size[0] * 1), int(text_size[1] * 1))
+        text_size = (int(text_img.size[0] * 0.75), int(text_img.size[1] * 1))
 
         background = self.get_background(text_size)
 
@@ -159,11 +151,9 @@ class CAPTCHA:
         out = self.draw_lines(out)
 
         return {
-            'img': self.convert_b64img(out),
-            'text': text,
-            'hash': jwtencrypt(
-                text, self.secret, expire_seconds=self.expire_secs
-            ),
+            "img": self.convert_b64img(out),
+            "text": text,
+            "hash": jwtencrypt(text, self.secret, expire_seconds=self.expire_secs),
         }
 
     def verify(self, c_text: str, c_hash: str) -> bool:
@@ -177,16 +167,14 @@ class CAPTCHA:
             bool: True if valid, False if invalid.
         """
         # handle parameter reversed order
-        if len(c_text.split('.')) == 3:
+        if len(c_text.split(".")) == 3:
             # jwt was passed as 1st arg correct
             c_text, c_hash = c_hash, c_text
 
         if c_hash in self.verified_captchas:
             return False
 
-        decoded_text = jwtdecrypt(
-            c_hash, c_text, self.config['SECRET_CAPTCHA_KEY']
-        )
+        decoded_text = jwtdecrypt(c_hash, c_text, self.config["SECRET_CAPTCHA_KEY"])
 
         # token expired or invalid
         if decoded_text is None:
@@ -212,17 +200,17 @@ class CAPTCHA:
         """
         img = (
             '<img class="simple-captcha-img" '
-            + 'src="data:image/png;base64, %s" />' % captcha['img']
+            + 'src="data:image/png;base64, %s" />' % captcha["img"]
         )
 
         inpu = (
             '<input type="text" class="simple-captcha-text"'
             + 'name="captcha-text">\n'
             + '<input type="hidden" name="captcha-hash" '
-            + 'value="%s">' % captcha['hash']
+            + 'value="%s">' % captcha["hash"]
         )
 
-        return '%s\n%s' % (img, inpu)
+        return "%s\n%s" % (img, inpu)
 
     def init_app(self, app):
         app.jinja_env.globals.update(captcha_html=self.captcha_html)
