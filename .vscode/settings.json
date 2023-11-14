@@ -1,9 +1,28 @@
 {
-    "python.analysis.extraPaths": [
-        "./venv/lib/python3.7/site-packages"
-    ],
-    "[python]": {
-        "editor.defaultFormatter": "ms-python.black-formatter"
-    },
-    "python.formatting.provider": "none"
+  "python.analysis.extraPaths": [
+    "./venv/lib/python3.7/site-packages",
+    "./venv/lib/python3.8/site-packages",
+    "./venv/lib/python3.9/site-packages",
+    "./venv/lib/python3.10/site-packages",
+    "./venv/lib/python3.11/site-packages"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true
+  },
+  "isort.args": [
+    "--profile",
+    "black",
+    "--trailing-comma",
+    "--use-parentheses",
+    "--line-width",
+    "79"
+  ],
+  "black-formatter.args": [
+    "-l 79",
+    "--skip-string-normalization",
+    "--skip-magic-trailing-comma",
+    "--preview",
+    "--target-version=py37"
+  ]
 }

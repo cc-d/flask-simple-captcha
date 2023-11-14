@@ -1,0 +1,12 @@
+[tool.isort]
+profile = "black"
+trailing_comma = true
+use_parentheses = true
+line_length = 79
+
+[tool.black]
+line_length = 79
+skip_string_normalization = true
+skip_magic_trailing_comma = true
+preview = true
+target-version = ['py37']

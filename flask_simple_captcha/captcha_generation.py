@@ -78,30 +78,36 @@ class CAPTCHA:
             color=(0, 0, 0, 255),
         )
 
-    def draw_lines(self, im, lines=25):
+    def draw_lines(self, im: Image, lines: int = 25):
         draw = ImageDraw.Draw(im)
 
         for i in range(lines):
-            if random.randint(0, 1) == 0:
-                draw.line(
-                    (
-                        random.randint(0, im.size[0]),
-                        0,
-                        random.randint(0, im.size[0]),
-                        im.size[1],
-                    ),
-                    width=2,
-                )
-            else:
+            line_type = random.choice(['line', 'ellipse', 'arc'])
+
+            x0 = random.randint(-100, im.size[0])
+            y0 = random.randint(-100, im.size[1])
+            x1 = random.randint(x0, im.size[0] + 100)
+            y1 = random.randint(y0, im.size[1] + 100)
+            w = random.randint(2, 3)
+
+            if line_type == 'line':
+                draw.line((x0, y0, x1, y1), fill=(255, 255, 255, 255), width=w)
+            elif line_type == 'ellipse':
                 draw.ellipse(
-                    (
-                        random.randint(-80, im.size[0]),
-                        random.randint(-80, -10),
-                        random.randint(-80, im.size[0]),
-                        im.size[1] + random.randint(10, 80),
-                    ),
+                    (x0, y0, x1, y1), outline=(255, 255, 255, 255), width=w
+                )
+
+            elif line_type == 'arc':
+                start_angle = random.randint(0, 180)
+                end_angle = random.randint(start_angle, 360)
+                draw.arc(
+                    (x0, y0, x1, y1),
+                    start=start_angle,
+                    end=end_angle,
+                    fill=(255, 255, 255, 255),
                     width=2,
                 )
+
         return im
 
     def convert_b64img(self, out):
