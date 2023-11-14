@@ -6,8 +6,8 @@ with open("README.md", "r") as r:
     README = r.read()
 
 setup(
-    name="flask-simple-captcha",
-    version="5.0.0",
+    name='flask-simple-captcha',
+    version='5.1.0',
     description=(
         'Extremely simple, "Good Enough" captcha implemention for flask forms.'
         " No server side session library required."
