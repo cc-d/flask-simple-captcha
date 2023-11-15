@@ -4,6 +4,7 @@ import string
 import os
 import sys
 import json
+from random import randint
 from datetime import datetime
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
@@ -78,36 +79,26 @@ class CAPTCHA:
             color=(0, 0, 0, 255),
         )
 
-    def draw_lines(self, im: Image, lines: int = 25):
+    def draw_lines(self, im: Image, lines: int = 6):
+        """draws the background lines behind captcha text img"""
         draw = ImageDraw.Draw(im)
+        x, y = im.size
+        xinc = int(x / 10)
+        yinc = int(y / 10)
 
         for i in range(lines):
-            line_type = random.choice(['line', 'ellipse', 'arc'])
-
-            x0 = random.randint(-100, im.size[0])
-            y0 = random.randint(-100, im.size[1])
-            x1 = random.randint(x0, im.size[0] + 100)
-            y1 = random.randint(y0, im.size[1] + 100)
-            w = random.randint(2, 3)
-
-            if line_type == 'line':
-                draw.line((x0, y0, x1, y1), fill=(255, 255, 255, 255), width=w)
-            elif line_type == 'ellipse':
-                draw.ellipse(
-                    (x0, y0, x1, y1), outline=(255, 255, 255, 255), width=w
-                )
-
-            elif line_type == 'arc':
-                start_angle = random.randint(0, 180)
-                end_angle = random.randint(start_angle, 360)
-                draw.arc(
-                    (x0, y0, x1, y1),
-                    start=start_angle,
-                    end=end_angle,
-                    fill=(255, 255, 255, 255),
-                    width=2,
-                )
-
+            if i % 3 == 0:
+                # ellipse
+                x0 = randint(-1 * xinc, x - (xinc * 2))
+                x1 = randint(x0 + xinc, x)
+                y0, y1 = yinc, y - yinc
+                draw.ellipse((x0, y0, x1, y1), width=3)
+            else:
+                x0 = randint(0, x)
+                y0 = randint(0, y)
+                x1 = randint(0, x)
+                y1 = randint(0, y)
+                draw.line((x0, y0, x1, y1), width=3)
         return im
 
     def convert_b64img(self, out):

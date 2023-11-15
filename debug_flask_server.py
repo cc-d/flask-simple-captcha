@@ -11,15 +11,10 @@ app = CAPTCHA.init_app(app)
 
 
 @app.route('/', methods=['GET', 'POST'])
-def example():
+def submit_captcha():
     if request.method == 'GET':
-        captcha = CAPTCHA.create()
-        return render_template_string(
-            '<form method="post">'
-            + '{{ captcha_html(captcha) | safe }}'
-            + '<input type="submit"></form>',
-            captcha=captcha,
-        )
+        captcha_dict = CAPTCHA.create()
+        return render_template_string(CAPTCHA.captcha_html(captcha_dict))
     if request.method == 'POST':
         c_hash = request.form.get('captcha-hash')
         c_text = request.form.get('captcha-text')
@@ -28,6 +23,17 @@ def example():
             return 'success'
         else:
             return 'failed captcha'
+
+
+@app.route('/images')
+def bulk_captchas():
+    num = 50
+    captchas = [CAPTCHA.create() for _ in range(int(num))]
+    captchas = [
+        '<img src="data:image/png;base64, %s" />' % c['img'] for c in captchas
+    ]
+    style = '<style>img display: inline-block; margin: 8px;</style>'
+    return style + '\n'.join(captchas)
 
 
 if __name__ == '__main__':

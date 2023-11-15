@@ -1,6 +1,6 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v5.2.0**
+### CURRENT VERSION: **v5.2.1**
 
 **v5.0.0+ added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
 
@@ -60,6 +60,12 @@ SIMPLE_CAPTCHA = CAPTCHA(config=config.CAPTCHA_CONFIG)
 app = SIMPLE_CAPTCHA.init_app(app)
 ```
 
+### Example Captcha Images
+
+Here is an example of what the generated CAPTCHA images look like:
+
+![Example CAPTCHA Image](/captcha-example.PNG)
+
 ### Protecting a Route
 
 To add CAPTCHA protection to a route, you can use the following code:
@@ -99,6 +105,8 @@ pip3 install -r requirements_dev.txt
 
 python3 debug_flask_server.py
 ```
+
+To generate multiple images to test the image generation patterns, you can visit `localhost:5000/images` to view 50 generated images at a time.
 
 ## Running Tests
 
