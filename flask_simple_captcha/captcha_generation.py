@@ -89,9 +89,10 @@ class CAPTCHA:
         for i in range(lines):
             if i % 3 == 0:
                 # ellipse
-                x0 = randint(-1 * xinc, x - (xinc * 2))
+                x0 = randint(-1 * xinc, x - (xinc * 1))
                 x1 = randint(x0 + xinc, x)
-                y0, y1 = yinc, y - yinc
+                y0 = randint(-1 * y * 2, yinc * 2)
+                y1 = randint(y // 2 + yinc, y + (y // 2))
                 draw.ellipse((x0, y0, x1, y1), width=3)
             else:
                 x0 = randint(0, x)
