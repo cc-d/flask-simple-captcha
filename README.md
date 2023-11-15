@@ -26,7 +26,6 @@ See the encryption / decryption breakdown below for more information on the veri
 - Python 3.7 or higher
 - Werkzeug >=0.16.0, <3
 - Pillow >4, <10
-- myfuncs >=1.4.8
 
 ## Installation
 

@@ -1,7 +1,6 @@
 Werkzeug<3,>=0.16.0
 Pillow>4, <10
 Flask<3
-myfuncs==1.4.8
 pyjwt<3,>=2
 black
 isort

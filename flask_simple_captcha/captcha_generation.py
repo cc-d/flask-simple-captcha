@@ -12,7 +12,6 @@ from typing import Tuple
 from uuid import uuid4
 from werkzeug.security import check_password_hash, generate_password_hash
 from .config import DEFAULT_CONFIG, EXPIRE_NORMALIZED
-from myfuncs import default_repr
 
 from .utils import (
     jwtencrypt,
@@ -223,4 +222,4 @@ class CAPTCHA:
         return app
 
     def __repr__(self):
-        return default_repr(self)
+        return '<CAPTCHA %r>' % self.config
