@@ -1,6 +1,5 @@
 [tool.isort]
 profile = "black"
-trailing_comma = true
 use_parentheses = true
 line_length = 79
 

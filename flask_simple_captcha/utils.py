@@ -1,15 +1,18 @@
+import base64
+import os
 import random
 import string
+import sys
 from datetime import datetime, timedelta
-from typing import Optional, Union, Set, Tuple
+from io import BytesIO
+from typing import Iterable, Optional, Set, Tuple, Union
 
 import jwt
-import sys
-import os
-from werkzeug.security import generate_password_hash, check_password_hash
+from PIL import Image
+from werkzeug.security import check_password_hash, generate_password_hash
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from .config import DEFAULT_CONFIG, EXCHARS, CHARPOOL, EXPIRE_NORMALIZED
+from .config import CHARPOOL, DEFAULT_CONFIG, EXCHARS, EXPIRE_NORMALIZED
 
 
 def hash_text(
@@ -115,19 +118,18 @@ def gen_captcha_text(
     length: int = 6,
     add_digits: bool = False,
     exclude_similar: bool = True,
-    charpool: Optional[Union[str, Set[str], Tuple[str]]] = None,
+    charpool: Optional[Iterable] = None,
     only_uppercase: Optional[bool] = None,
 ) -> str:
     """Generate a random CAPTCHA text.
-
     Args:
-        length (int, optional): The length of the CAPTCHA text.
+        length (int): The length of the CAPTCHA text.
             Defaults to 6
-        add_digits (bool, optional): Whether to add digits to the character pool.
+        add_digits (bool): add digits to the character pool?
             Defaults to False
-        exclude_similar (bool, optional): Whether to exclude visually similar characters
+        exclude_similar (bool): exclude visually similar characters?
             from the character pool. Defaults to True.
-        charpool (Union[str, Set[str], Tuple[str]], optional): The character pool to
+        charpool (Iterable, optional): The character pool to
             generate the CAPTCHA text from. If this is provided, it will
             override the default character pool as well as add_digits.
             Defaults to None.
@@ -135,7 +137,6 @@ def gen_captcha_text(
             a custom character pool is passed, only the uppercase characters will
             be used from that pool.
             Defaults to True.
-
     Returns:
         str: The generated CAPTCHA text.
     """
@@ -154,3 +155,14 @@ def gen_captcha_text(
         charpool += tuple(set(string.digits))
 
     return ''.join((random.choice(charpool) for _ in range(length)))
+
+
+def convert_b64img(captcha_img: Image) -> str:
+    """Convert PIL image to base64 string"""
+    byte_array = BytesIO()
+    captcha_img.save(byte_array, format='PNG')
+    byte_array = byte_array.getvalue()
+    b64image = base64.b64encode(byte_array)
+    b64image = str(b64image)
+    b64image = b64image[2:][:-1]
+    return b64image

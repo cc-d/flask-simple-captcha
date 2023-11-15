@@ -20,6 +20,7 @@ from .utils import (
     gen_captcha_text,
     CHARPOOL,
     exclude_similar_chars,
+    convert_b64img,
 )
 
 
@@ -72,7 +73,12 @@ class CAPTCHA:
         self.characters = tuple(set(chars))
 
     def get_background(self, text_size: Tuple[int, int]) -> Image:
-        """Generate a background image."""
+        """Generate a background image based on text img size
+        Args:
+            text_size (Tuple[int, int]): size of text img
+        Returns:
+            Image: background image for the text img
+        """
         return Image.new(
             'RGBA',
             (int(text_size[0] * 1.25), int(text_size[1] * 1.5)),
@@ -101,17 +107,6 @@ class CAPTCHA:
                 y1 = randint(0, y)
                 draw.line((x0, y0, x1, y1), width=3)
         return im
-
-    def convert_b64img(self, out):
-        byte_array = BytesIO()
-        out.save(byte_array, format='PNG')
-        byte_array = byte_array.getvalue()
-
-        b64image = base64.b64encode(byte_array)
-        b64image = str(b64image)
-        b64image = b64image[2:][:-1]
-
-        return b64image
 
     def create(self, length=None, digits=None) -> str:
         """Create a new CAPTCHA dict and add it to self.captchas"""
@@ -153,11 +148,11 @@ class CAPTCHA:
             ),
         )
 
-        out = background.resize((200, 60))
-        out = self.draw_lines(out)
+        out_img = background.resize((200, 60))
+        out_img = self.draw_lines(out_img)
 
         return {
-            'img': self.convert_b64img(out),
+            'img': convert_b64img(out_img),
             'text': text,
             'hash': jwtencrypt(
                 text, self.secret, expire_seconds=self.expire_secs

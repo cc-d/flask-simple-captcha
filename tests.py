@@ -20,6 +20,7 @@ from flask_simple_captcha.utils import (
     exclude_similar_chars,
     CHARPOOL,
     hash_text,
+    convert_b64img,
 )
 
 _TESTTEXT = 'TestText'
@@ -73,7 +74,7 @@ class TestCAPTCHA(unittest.TestCase):
 
     def test_convert_b64img(self):
         img = Image.new('RGB', (60, 30), color=(73, 109, 137))
-        b64image = self.captcha.convert_b64img(img)
+        b64image = convert_b64img(img)
         self.assertIsInstance(b64image, str)
 
     def test_repr(self):

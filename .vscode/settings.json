@@ -13,7 +13,6 @@
   "isort.args": [
     "--profile",
     "black",
-    "--trailing-comma",
     "--use-parentheses",
     "--line-width",
     "79"
@@ -21,8 +20,6 @@
   "black-formatter.args": [
     "-l 79",
     "--skip-string-normalization",
-    "--skip-magic-trailing-comma",
-    "--preview",
-    "--target-version=py37"
+    "--skip-magic-trailing-comma"
   ]
 }
