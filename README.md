@@ -1,6 +1,6 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v5.2.2**
+### CURRENT VERSION: **v5.2.3**
 
 **v5.0.0+ added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
 
