@@ -1,6 +1,6 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v5.3.0**
+### CURRENT VERSION: **v5.3.1**
 
 **v5.0.0+ added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
 
@@ -65,12 +65,6 @@ SIMPLE_CAPTCHA = CAPTCHA(config=YOUR_CONFIG)
 app = SIMPLE_CAPTCHA.init_app(app)
 ```
 
-### Example Captcha Images
-
-Here is an example of what the generated CAPTCHA images look like, this is a screen shot from the /images route of the debug server.
-
-![Example CAPTCHA Image](/captcha-example.PNG)
-
 ### Protecting a Route
 
 To add CAPTCHA protection to a route, you can use the following code:
@@ -99,6 +93,12 @@ In your HTML template, you need to wrap the CAPTCHA inputs within a form element
   <input type="submit" value="Submit" />
 </form>
 ```
+
+## Example Captcha Images
+
+Here is an example of what the generated CAPTCHA images look like, this is a screen shot from the `/images` route of the debug server.
+
+![Example CAPTCHA Image](/captcha-example.PNG)
 
 ## Encryption and Decryption Breakdown
 
@@ -206,8 +206,13 @@ flask-simple-captcha/venv/bin/python
 cachedir: .pytest_cache
 rootdir: /Users/mym2/flask-simple-captcha
 plugins: cov-4.1.0
-collected 19 items
+collected 24 items
 
+tests.py::TestConfig::test_config_with_expire_minutes_only PASSED
+tests.py::TestConfig::test_expire_minutes_without_expire_seconds PASSED
+tests.py::TestConfig::test_expire_seconds_priority PASSED
+tests.py::TestConfig::test_no_expire_values PASSED
+tests.py::TestConfig::test_only_expire_minutes PASSED
 tests.py::TestCAPTCHA::test_arg_order PASSED
 tests.py::TestCAPTCHA::test_backwards_defaults PASSED
 tests.py::TestCAPTCHA::test_captcha_html PASSED
@@ -228,20 +233,20 @@ tests.py::TestCaptchaUtils::test_jwtdecrypt_invalid_token PASSED
 tests.py::TestCaptchaUtils::test_jwtdecrypt_valid_token PASSED
 tests.py::TestCaptchaUtils::test_jwtencrypt PASSED
 
----- coverage: platform darwin, python 3.11.5-final-0 ----
+---------- coverage: platform darwin, python 3.11.5-final-0 ----------
 Name                                         Stmts   Miss  Cover   Missing
---------------------------------------------------------------------------
+----------
 __init__.py                                      0      0   100%
 flask_simple_captcha/__init__.py                 3      0   100%
-flask_simple_captcha/captcha_generation.py     103     10    90%   38-46, 49, 57-58, 64, 193
-flask_simple_captcha/config.py                   8      1    88%   23
+flask_simple_captcha/captcha_generation.py     103      7    93%   39, 43, 46, 54-55, 61, 190
+flask_simple_captcha/config.py                   6      0   100%
 flask_simple_captcha/utils.py                   59      3    95%   81, 110, 112
-tests.py                                       135      1    99%   198
---------------------------------------------------------------------------
-TOTAL                                          308     15    95%
+tests.py                                       172      8    95%   39-42, 51, 55, 66, 68, 262
+----------
+TOTAL                                          343     18    95%
 
 
-============== 19 passed in 5.24s ==============
+======= 24 passed in 4.35s =======
 ```
 
 ## Debug Server
@@ -249,7 +254,6 @@ TOTAL                                          308     15    95%
 #### **Start the debug server without VS Code**
 
 1. **Set Environment Variables:**
-
    - Before running the debug Flask server, set the required environment variables:
    - On macOS/Linux:
      ```bash
@@ -266,7 +270,6 @@ TOTAL                                          308     15    95%
      $env:FLASK_APP="debug_flask_server"
      $env:FLASK_DEBUG="1"
      ```
-
 2. **Start the debug Flask server:**
    - Run the following command to start the debug Flask server:
      ```bash

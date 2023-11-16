@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from flask_simple_captcha import CAPTCHA
 
-from flask_simple_captcha.config import DEFAULT_CONFIG
+from flask_simple_captcha.config import DEFAULT_CONFIG, EXPIRE_NORMALIZED
 from flask_simple_captcha.utils import (
     jwtencrypt,
     jwtdecrypt,
@@ -25,6 +25,70 @@ from flask_simple_captcha.utils import (
 
 _TESTTEXT = 'TestText'
 _TESTKEY = 'TestKey'
+
+
+class TestConfig(unittest.TestCase):
+    def test_expire_seconds_priority(self):
+        config_with_both = {'EXPIRE_SECONDS': 600, 'EXPIRE_MINUTES': 10}
+        expected_expire_normalized = (
+            600  # Expecting EXPIRE_SECONDS to take priority
+        )
+
+        if 'EXPIRE_SECONDS' in config_with_both:
+            expire_normalized = config_with_both['EXPIRE_SECONDS']
+        elif 'EXPIRE_MINUTES' in config_with_both:
+            expire_normalized = config_with_both['EXPIRE_MINUTES'] * 60
+        else:
+            expire_normalized = EXPIRE_NORMALIZED  # Or set a default value
+
+        self.assertEqual(expire_normalized, expected_expire_normalized)
+
+    def test_only_expire_minutes(self):
+        config_with_minutes = {'EXPIRE_MINUTES': 10}
+        expected_expire_normalized = 600  # 10 minutes in seconds
+
+        if 'EXPIRE_SECONDS' in config_with_minutes:
+            expire_normalized = config_with_minutes['EXPIRE_SECONDS']
+        elif 'EXPIRE_MINUTES' in config_with_minutes:
+            expire_normalized = config_with_minutes['EXPIRE_MINUTES'] * 60
+        else:
+            expire_normalized = EXPIRE_NORMALIZED  # Or set a default value
+
+        self.assertEqual(expire_normalized, expected_expire_normalized)
+
+    def test_no_expire_values(self):
+        config_without_expire = {}
+        expected_expire_normalized = (
+            EXPIRE_NORMALIZED  # Assuming no default value is set
+        )
+
+        if 'EXPIRE_SECONDS' in config_without_expire:
+            expire_normalized = config_without_expire['EXPIRE_SECONDS']
+        elif 'EXPIRE_MINUTES' in config_without_expire:
+            expire_normalized = config_without_expire['EXPIRE_MINUTES'] * 60
+        else:
+            expire_normalized = EXPIRE_NORMALIZED  # Or set a default value
+
+        self.assertEqual(expire_normalized, expected_expire_normalized)
+
+    def test_expire_minutes_without_expire_seconds(self):
+        # Simulate a scenario where 'EXPIRE_MINUTES' is set, but 'EXPIRE_SECONDS' is not
+        config = {'EXPIRE_MINUTES': 10}
+        expected_expire_normalized = 600  # 10 minutes in seconds
+
+        captcha = CAPTCHA(config)
+        self.assertEqual(captcha.expire_secs, expected_expire_normalized)
+
+    def test_config_with_expire_minutes_only(self):
+        config_with_expire_minutes = {
+            'SECRET_CAPTCHA_KEY': 'TestKey',
+            'CAPTCHA_LENGTH': 6,
+            'EXPIRE_MINUTES': 5,
+        }
+        captcha_instance = CAPTCHA(config_with_expire_minutes)
+        self.assertEqual(
+            captcha_instance.expire_secs, 300
+        )  # 5 minutes * 60 seconds
 
 
 class TestCAPTCHA(unittest.TestCase):

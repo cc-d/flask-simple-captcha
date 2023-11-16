@@ -11,7 +11,7 @@ from PIL import Image, ImageDraw, ImageFont
 from typing import Tuple
 from uuid import uuid4
 from werkzeug.security import check_password_hash, generate_password_hash
-from .config import DEFAULT_CONFIG, EXPIRE_NORMALIZED
+from .config import DEFAULT_CONFIG
 
 from .utils import (
     jwtencrypt,
@@ -33,17 +33,14 @@ class CAPTCHA:
         self.verified_captchas = set()
         self.secret = self.config['SECRET_CAPTCHA_KEY']
 
-        if 'EXPIRE_NORMALIZED' in self.config:
-            self.expire_secs = self.config['EXPIRE_NORMALIZED']
-        elif 'EXPIRE_SECONDS' in self.config:
-            self.expire_secs = self.config['EXPIRE_SECONDS']
-        elif (
-            'EXPIRE_MINUTES' in self.config
-            and 'EXPIRE_SECONDS' not in self.config
-        ):
-            self.expire_secs = self.config['EXPIRE_MINUTES'] * 60
+        if 'EXPIRE_NORMALIZED' in config:
+            self.expire_secs = config['EXPIRE_NORMALIZED']
+        elif 'EXPIRE_SECONDS' in config:
+            self.expire_secs = config['EXPIRE_SECONDS']
+        elif 'EXPIRE_MINUTES' in config and 'EXPIRE_SECONDS' not in config:
+            self.expire_secs = config['EXPIRE_MINUTES'] * 60
         else:
-            self.expire_secs = EXPIRE_NORMALIZED
+            self.expire_secs = DEFAULT_CONFIG['EXPIRE_SECONDS']
 
         if 'CHARACTER_POOL' in self.config:
             chars = self.config['CHARACTER_POOL']
