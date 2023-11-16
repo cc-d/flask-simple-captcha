@@ -248,7 +248,7 @@ TOTAL                                          171      0   100%
      ```bash
      flask run --no-debugger
      ```
-   - This will start the debug Flask server with debugging features enabled, including the interactive debugger and automatic reloader. See the navigation section below on how to access the debug server.
+   - This will start the debug Flask server with the automatic reloader. See the navigation section below on how to access the debug server.
 
 #### **Start the debug server with VS Code**
 
