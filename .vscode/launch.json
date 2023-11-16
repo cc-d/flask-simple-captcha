@@ -13,7 +13,7 @@
         "tests.py",
         "-s",
         "-vv",
-        "--cov",
+        "--cov=flask_simple_captcha/",
         "--cov-report",
         "term-missing"
       ],

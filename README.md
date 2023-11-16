@@ -186,11 +186,13 @@ Uses a combination of JWTs and Werkzeug's password hashing to encrypt and decryp
 
 #### ENSURE YOU HAVE A VENV NAMED `venv` IN THE PROJECT DIRECTORY AND THAT IT IS ACTIVATED AND BOTH THE DEPENDENCIES AND THE LOCAL FLASK-SIMPLE-CAPTCHA PACKAGE ARE INSTALLED IN THE VENV
 
+As of the time of me writing this README (2023-11-15), pytest reports 100% test coverage of the logic in the `flask_simple_captcha` package. Please keep it that way.
+
 ### Run Tests Without VS Code
 
 - Run the tests using the following command (make sure your venv is activated and you are in the project directory)
   ```bash
-  python -m pytest tests.py -s -vv --cov --cov-report term-missing
+  python -m pytest tests.py -s -vv --cov=flask_simple_captcha/ --cov-report term-missing
   ```
 - The command runs pytest with flags for verbose output, standard output capture, coverage report, and displaying missing lines in the coverage.
 
@@ -201,52 +203,23 @@ Simply hit command + shift + p and type "Select And Start Debugging" and select 
 ### Example Test Output
 
 ```bash
-===== test session starts =====
-flask-simple-captcha/venv/bin/python
-cachedir: .pytest_cache
-rootdir: /Users/mym2/flask-simple-captcha
-plugins: cov-4.1.0
-collected 24 items
+... previous output omitted for brevity ...
 
-tests.py::TestConfig::test_config_with_expire_minutes_only PASSED
-tests.py::TestConfig::test_expire_minutes_without_expire_seconds PASSED
-tests.py::TestConfig::test_expire_seconds_priority PASSED
-tests.py::TestConfig::test_no_expire_values PASSED
-tests.py::TestConfig::test_only_expire_minutes PASSED
-tests.py::TestCAPTCHA::test_arg_order PASSED
-tests.py::TestCAPTCHA::test_backwards_defaults PASSED
-tests.py::TestCAPTCHA::test_captcha_html PASSED
-tests.py::TestCAPTCHA::test_convert_b64img PASSED
-tests.py::TestCAPTCHA::test_create PASSED
-tests.py::TestCAPTCHA::test_get_background PASSED
-tests.py::TestCAPTCHA::test_init_app PASSED
-tests.py::TestCAPTCHA::test_jwt_expiration PASSED
-tests.py::TestCAPTCHA::test_repr PASSED
-tests.py::TestCAPTCHA::test_reversed_args PASSED
-tests.py::TestCAPTCHA::test_verify_duplicate PASSED
-tests.py::TestCAPTCHA::test_verify_invalid PASSED
-tests.py::TestCAPTCHA::test_verify_valid PASSED
-tests.py::TestCaptchaUtils::test_exclude_similar_chars PASSED
-tests.py::TestCaptchaUtils::test_gen_captcha_text PASSED
-tests.py::TestCaptchaUtils::test_hashed_text PASSED
-tests.py::TestCaptchaUtils::test_jwtdecrypt_invalid_token PASSED
-tests.py::TestCaptchaUtils::test_jwtdecrypt_valid_token PASSED
 tests.py::TestCaptchaUtils::test_jwtencrypt PASSED
+tests.py::TestCaptchaUtils::test_no_hashed_text PASSED
 
 ---------- coverage: platform darwin, python 3.11.5-final-0 ----------
 Name                                         Stmts   Miss  Cover   Missing
-----------
-__init__.py                                      0      0   100%
+--------------------------------------------------------------------------
 flask_simple_captcha/__init__.py                 3      0   100%
-flask_simple_captcha/captcha_generation.py     103      7    93%   39, 43, 46, 54-55, 61, 190
+flask_simple_captcha/captcha_generation.py     103      0   100%
 flask_simple_captcha/config.py                   6      0   100%
-flask_simple_captcha/utils.py                   59      3    95%   81, 110, 112
-tests.py                                       172      8    95%   39-42, 51, 55, 66, 68, 262
-----------
-TOTAL                                          343     18    95%
+flask_simple_captcha/utils.py                   59      0   100%
+--------------------------------------------------------------------------
+TOTAL                                          171      0   100%
 
 
-======= 24 passed in 4.35s =======
+========== 32 passed in 4.39s ==========
 ```
 
 ## Debug Server
@@ -289,6 +262,10 @@ Navigate to `localhost:5000` in your browser to view the debug server.
 ## Contributing
 
 Feel free to open a PR. The project has undergone a recent overhaul to improve the code quality.
+
+If you make changes in the logic, please follow the steps laid out in this document for testing and debugging. Make sure the coverage % stays >= 100% and that you verify manually at least once that things look okay by submitting a real CAPTCHA in the debug server.
+
+The `pyproject.toml` has the required configuration for `black` and `isort`. There is also a vscode settings file equivalent to the `pyproject.toml` file in `.vscode/settings.json`.
 
 ## License
 

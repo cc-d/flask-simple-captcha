@@ -29,7 +29,6 @@ class CAPTCHA:
     def __init__(self, config: dict):
         """Initialize CAPTCHA with default configuration."""
         self.config = {**DEFAULT_CONFIG, **config}
-
         self.verified_captchas = set()
         self.secret = self.config['SECRET_CAPTCHA_KEY']
 

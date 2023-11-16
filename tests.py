@@ -72,7 +72,6 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(expire_normalized, expected_expire_normalized)
 
     def test_expire_minutes_without_expire_seconds(self):
-        # Simulate a scenario where 'EXPIRE_MINUTES' is set, but 'EXPIRE_SECONDS' is not
         config = {'EXPIRE_MINUTES': 10}
         expected_expire_normalized = 600  # 10 minutes in seconds
 
@@ -86,9 +85,7 @@ class TestConfig(unittest.TestCase):
             'EXPIRE_MINUTES': 5,
         }
         captcha_instance = CAPTCHA(config_with_expire_minutes)
-        self.assertEqual(
-            captcha_instance.expire_secs, 300
-        )  # 5 minutes * 60 seconds
+        self.assertEqual(captcha_instance.expire_secs, 300)
 
 
 class TestCAPTCHA(unittest.TestCase):
@@ -194,6 +191,65 @@ class TestCAPTCHA(unittest.TestCase):
             for c in result['text']:
                 self.assertIn(c, string.ascii_uppercase)
 
+    def test_expire_seconds(self):
+        """ensures expire_seconds is set correctly"""
+        del self.config['EXPIRE_NORMALIZED']
+        self.config['EXPIRE_SECONDS'] = 100
+        self.captcha = CAPTCHA(self.config)
+        self.assertEqual(self.captcha.expire_secs, 100)
+
+    @patch(
+        'flask_simple_captcha.captcha_generation.DEFAULT_CONFIG',
+        {'EXPIRE_SECONDS': 99},
+    )
+    def test_default_expire_seconds(self):
+        conf = DEFAULT_CONFIG.copy()
+        del conf['EXPIRE_NORMALIZED']
+        del conf['EXPIRE_SECONDS']
+
+        captcha = CAPTCHA(conf)
+        self.assertEqual(captcha.expire_secs, 99)
+
+    @patch('flask_simple_captcha.captcha_generation.CHARPOOL', 'Z')
+    def test_charpool(self):
+        conf = DEFAULT_CONFIG.copy()
+
+        cap = CAPTCHA(conf)
+        self.assertEqual(cap.characters, ('Z',))
+
+    def test_charpool_in_config(self):
+        conf = DEFAULT_CONFIG.copy()
+        conf['CHARACTER_POOL'] = 'X'
+
+        cap = CAPTCHA(conf)
+        self.assertEqual(cap.characters, ('X',))
+
+    def test_only_upper_false(self):
+        conf = DEFAULT_CONFIG.copy()
+        testchars = 'AaBb'
+        conf['ONLY_UPPERCASE'] = False
+        conf['CHARACTER_POOL'] = testchars
+
+        cap = CAPTCHA(conf)
+        for c in cap.characters:
+            self.assertIn(c, testchars)
+
+    def test_captcha_digits(self):
+        conf = DEFAULT_CONFIG.copy()
+        conf['CAPTCHA_DIGITS'] = True
+
+        cap = CAPTCHA(conf)
+        for c in ['2', '3', '4', '5', '6', '7', '8', '9']:
+            self.assertIn(c, cap.characters)
+
+    @patch('flask_simple_captcha.captcha_generation.jwtdecrypt')
+    def test_decrypt_text_nomatch(self, mock_jwtdecrypt):
+        mock_jwtdecrypt.return_value = 'afsddsgfewfewggwegfw'
+        conf = DEFAULT_CONFIG.copy()
+        cap = CAPTCHA(conf)
+        cap.create()
+        self.assertFalse(cap.verify('test', 'test'))
+
 
 class TestCaptchaUtils(unittest.TestCase):
     def test_jwtencrypt(self):
@@ -256,6 +312,23 @@ class TestCaptchaUtils(unittest.TestCase):
     def test_hashed_text(self):
         hashed_text = hash_text(_TESTTEXT, _TESTKEY)
         self.assertTrue(check_password_hash(hashed_text, _TESTKEY + _TESTTEXT))
+
+    @patch('flask_simple_captcha.utils.jwt.decode')
+    def test_no_hashed_text(self, mock_jwtdecode):
+        mock_jwtdecode.return_value = {'not': 'in'}
+        hashed_text = jwtdecrypt(_TESTTEXT, _TESTKEY)
+        self.assertIsNone(hashed_text)
+
+    @patch('flask_simple_captcha.utils.EXCHARS', 'abcd')
+    def test_exclude_similar_chars(self):
+        # pass fake args
+        testset = {'a', 'b', 'c', 'd', 'e'}
+        exchars = exclude_similar_chars(testset)
+        self.assertEqual(exchars, {'e'})
+
+        testlist = ['a', 'b', 'c', 'd', 'e']
+        exchars = exclude_similar_chars(testlist)
+        self.assertEqual(exchars, ['e'])
 
 
 if __name__ == '__main__':
