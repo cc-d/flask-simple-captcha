@@ -30,7 +30,8 @@
       "module": "debug_flask_server",
       "env": {
         "FLASK_APP": "debug_flask_server",
-        "FLASK_DEBUG": "1"
+        "FLASK_DEBUG": "1",
+        "PYTHONPATH": "${workspaceFolder}"
       },
       "args": ["run", "--no-debugger"],
       "jinja": true,

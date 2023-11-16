@@ -155,14 +155,3 @@ def gen_captcha_text(
         charpool += tuple(set(string.digits))
 
     return ''.join((random.choice(charpool) for _ in range(length)))
-
-
-def convert_b64img(captcha_img: Image) -> str:
-    """Convert PIL image to base64 string"""
-    byte_array = BytesIO()
-    captcha_img.save(byte_array, format='PNG')
-    byte_array = byte_array.getvalue()
-    b64image = base64.b64encode(byte_array)
-    b64image = str(b64image)
-    b64image = b64image[2:][:-1]
-    return b64image

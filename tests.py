@@ -20,11 +20,18 @@ from flask_simple_captcha.utils import (
     exclude_similar_chars,
     CHARPOOL,
     hash_text,
-    convert_b64img,
 )
+from flask_simple_captcha.img import (
+    convert_b64img,
+    draw_lines,
+    create_text_img,
+)
+from flask_simple_captcha.text import CaptchaFont, get_font, CAPTCHA_FONTS
 
 _TESTTEXT = 'TestText'
 _TESTKEY = 'TestKey'
+
+app = Flask(__name__)
 
 
 class TestConfig(unittest.TestCase):
@@ -88,12 +95,18 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(captcha_instance.expire_secs, 300)
 
 
+class TestImg(unittest.TestCase):
+    def test_convert_b64img(self):
+        img = Image.new('RGB', (60, 30), color=(73, 109, 137))
+        b64image = convert_b64img(img)
+        self.assertIsInstance(b64image, str)
+
+
 class TestCAPTCHA(unittest.TestCase):
     def setUp(self):
         self.config = DEFAULT_CONFIG
         self.config['EXPIRE_NORMALIZED'] = 60
         self.captcha = CAPTCHA(self.config)
-        self.app = Flask(__name__)
 
     def test_create(self):
         result = self.captcha.create()
@@ -129,14 +142,7 @@ class TestCAPTCHA(unittest.TestCase):
     def test_get_background(self):
         text_size = (50, 50)
         bg = self.captcha.get_background(text_size)
-        self.assertEqual(
-            bg.size, (int(text_size[0] * 1.25), int(text_size[1] * 1.5))
-        )
-
-    def test_convert_b64img(self):
-        img = Image.new('RGB', (60, 30), color=(73, 109, 137))
-        b64image = convert_b64img(img)
-        self.assertIsInstance(b64image, str)
+        self.assertEqual(bg.size, (text_size[0], text_size[1]))
 
     def test_repr(self):
         repr_str = repr(self.captcha)
@@ -329,6 +335,46 @@ class TestCaptchaUtils(unittest.TestCase):
         testlist = ['a', 'b', 'c', 'd', 'e']
         exchars = exclude_similar_chars(testlist)
         self.assertEqual(exchars, ['e'])
+
+
+class TestText(unittest.TestCase):
+    def setUp(self):
+        self.fonts = CAPTCHA_FONTS
+
+    def test_repr_format(self):
+        _font = self.fonts[0]
+        _name = _font.name
+
+        font = CaptchaFont(self.fonts[0].path)
+        self.assertEqual(repr(font), '<CaptchaFont %r>' % _name)
+
+    def test_get_font(self):
+        font = get_font('arial', self.fonts)
+        self.assertIsInstance(font, CaptchaFont)
+
+    def test_get_font_by_filename(self):
+        font = get_font('arial.ttf', self.fonts)
+        self.assertIsInstance(font, CaptchaFont)
+
+    def test_get_font_by_path(self):
+        font = get_font(self.fonts[0].path, self.fonts)
+        self.assertIsInstance(font, CaptchaFont)
+
+    def test_get_font_not_found(self):
+        font = get_font('notfourqeqerfqwnd', self.fonts)
+        self.assertIsNone(font)
+
+
+class TestBackwardsCompatibleMethods(unittest.TestCase):
+    def setUp(self):
+        self.config = DEFAULT_CONFIG
+        self.config['EXPIRE_NORMALIZED'] = 60
+        self.captcha = CAPTCHA(self.config)
+
+    @patch('flask_simple_captcha.captcha_generation.new_draw_lines')
+    def test_draw_lines(self, mock_drawlines):
+        self.captcha.draw_lines(Image.new('RGB', (100, 100)))
+        mock_drawlines.assert_called_once_with(Image.new('RGB', (100, 100)))
 
 
 if __name__ == '__main__':

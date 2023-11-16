@@ -1,11 +1,12 @@
+import sys
+import os.path as op
 from flask import Flask, request, render_template_string
+
 from flask_simple_captcha import CAPTCHA, DEFAULT_CONFIG
 
 app = Flask(__name__)
 test_config = DEFAULT_CONFIG.copy()
 
-
-print(test_config)
 CAPTCHA = CAPTCHA(config=test_config)
 app = CAPTCHA.init_app(app)
 

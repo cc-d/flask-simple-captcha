@@ -1,8 +1,10 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v5.3.2**
+### CURRENT VERSION: **v5.4.0**
 
 **v5.0.0+ added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
+
+**v5.4.0+ added support for multiple fonts, variation in font size/family, PNG/JPEG img format support (with the default now being JPEG for performance reasons), more consistentency as to where the noise lines appeared, and the image creation code in general was refactored and optimized.**
 
 `flask-simple-captcha` is a CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 
@@ -20,6 +22,8 @@ See the encryption / decryption breakdown below for more information on the veri
 - Avoids visually similar characters by default
 - Supports custom character set provided by user
 - Casing of submitted captcha is ignored by default
+- Minor random font variation in regards to size/family/etc
+- PNG/JPEG image format support
 
 ## Prerequisites
 
@@ -186,7 +190,7 @@ Uses a combination of JWTs and Werkzeug's password hashing to encrypt and decryp
 
 #### ENSURE YOU HAVE A VENV NAMED `venv` IN THE PROJECT DIRECTORY AND THAT IT IS ACTIVATED AND BOTH THE DEPENDENCIES AND THE LOCAL FLASK-SIMPLE-CAPTCHA PACKAGE ARE INSTALLED IN THE VENV
 
-As of the time of me writing this README (2023-11-15), pytest reports 100% test coverage of the logic in the `flask_simple_captcha` package. Please keep it that way.
+As of the time of me writing this README (2023-11-15), pytest reports 97% test coverage of the logic in the `flask_simple_captcha` package. Should be kept as close to 100% as possible. If I hadn't spent the last 7 hours working on this, I'd do it tonight.
 
 ### Run Tests Without VS Code
 
@@ -208,18 +212,20 @@ Simply hit command + shift + p and type "Select And Start Debugging" and select 
 tests.py::TestCaptchaUtils::test_jwtencrypt PASSED
 tests.py::TestCaptchaUtils::test_no_hashed_text PASSED
 
----------- coverage: platform darwin, python 3.11.5-final-0 ----------
+---------- coverage: platform darwin, python 3.8.18-final-0 ----------
 Name                                         Stmts   Miss  Cover   Missing
 --------------------------------------------------------------------------
 flask_simple_captcha/__init__.py                 3      0   100%
-flask_simple_captcha/captcha_generation.py     103      0   100%
-flask_simple_captcha/config.py                   6      0   100%
-flask_simple_captcha/utils.py                   59      0   100%
+flask_simple_captcha/captcha_generation.py      89      5    94%   89-93
+flask_simple_captcha/config.py                   7      0   100%
+flask_simple_captcha/img.py                     46      1    98%   28
+flask_simple_captcha/text.py                    25      0   100%
+flask_simple_captcha/utils.py                   51      0   100%
 --------------------------------------------------------------------------
-TOTAL                                          171      0   100%
+TOTAL                                          221      6    97%
 
 
-========== 32 passed in 4.39s ==========
+================= 38 passed in 4.28s =================
 ```
 
 ## Debug Server
@@ -257,7 +263,7 @@ TOTAL                                          171      0   100%
 
 ### Accessing the Debug Server
 
-Navigate to `localhost:5000` in your browser to view the debug server.
+Navigate to `localhost:5000` in your browser to view the debug server. You can also navigate to `localhost:5000/images` to view 50 CAPTCHA images at once.
 
 ## Contributing
 

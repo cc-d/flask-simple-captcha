@@ -4,7 +4,7 @@ import string
 import os
 import sys
 import json
-from random import randint
+from random import randint, choice as rchoice
 from datetime import datetime
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
@@ -19,8 +19,14 @@ from .utils import (
     gen_captcha_text,
     CHARPOOL,
     exclude_similar_chars,
-    convert_b64img,
 )
+
+from .img import (
+    convert_b64img as new_convert_b64img,
+    draw_lines as new_draw_lines,
+    create_text_img,
+)
+from .text import CAPTCHA_FONTS, get_font
 
 
 class CAPTCHA:
@@ -32,6 +38,7 @@ class CAPTCHA:
         self.verified_captchas = set()
         self.secret = self.config['SECRET_CAPTCHA_KEY']
 
+        # jwt expiration time
         if 'EXPIRE_NORMALIZED' in config:
             self.expire_secs = config['EXPIRE_NORMALIZED']
         elif 'EXPIRE_SECONDS' in config:
@@ -41,11 +48,13 @@ class CAPTCHA:
         else:
             self.expire_secs = DEFAULT_CONFIG['EXPIRE_SECONDS']
 
+        # character pool
         if 'CHARACTER_POOL' in self.config:
             chars = self.config['CHARACTER_POOL']
         else:
             chars = ''.join(CHARPOOL)
 
+        # uppercase characters
         if (
             'ONLY_UPPERCASE' in self.config
             and self.config['ONLY_UPPERCASE'] is False
@@ -56,55 +65,52 @@ class CAPTCHA:
             chars = ''.join(set(c.upper() for c in chars))
             self.only_upper = True
 
+        # digits
         if self.config['CAPTCHA_DIGITS']:
             chars += string.digits
 
-        if (
-            'EXCLUDE_VISUALLY_SIMILAR' not in self.config
-            or self.config['EXCLUDE_VISUALLY_SIMILAR']
-        ):
+        # visually similar characters
+        if self.config['EXCLUDE_VISUALLY_SIMILAR']:
             chars = exclude_similar_chars(chars)
 
         self.characters = tuple(set(chars))
 
+        # img format
+        self.img_format = self.config['CAPTCHA_IMG_FORMAT']
+
+        # fonts
+        self.fonts = CAPTCHA_FONTS
+        self.font_size = self.config['TEXT_FONT_SIZE']
+        self.vary_font_size = self.config['VARY_FONT_SIZE']
+        self.vary_font_range = self.config['VARY_FONT_RANGE']
+
+        # if USE_TEXT_FONTS is set in config, only use those fonts
+        if 'USE_TEXT_FONTS' in self.config:
+            self.fonts = []
+            for fntname in self.config['USE_TEXT_FONTS']:
+                fnt = get_font(fntname, CAPTCHA_FONTS)
+                if fnt is not None:
+                    self.fonts.append(fnt)
+
     def get_background(self, text_size: Tuple[int, int]) -> Image:
-        """Generate a background image based on text img size
-        Args:
-            text_size (Tuple[int, int]): size of text img
-        Returns:
-            Image: background image for the text img
-        """
+        """preserved for backwards compatibility"""
         return Image.new(
             'RGBA',
-            (int(text_size[0] * 1.25), int(text_size[1] * 1.5)),
+            (int(text_size[0]), int(text_size[1])),
             color=(0, 0, 0, 255),
         )
 
-    def draw_lines(self, im: Image, lines: int = 6):
-        """draws the background lines behind captcha text img"""
-        draw = ImageDraw.Draw(im)
-        x, y = im.size
-        xinc = int(x / 10)
-        yinc = int(y / 10)
+    def convert_b64img(self, *args, **kwargs) -> str:
+        """preserved for backwards compatibility"""
+        return new_convert_b64img(*args, **kwargs)
 
-        for i in range(lines):
-            if i % 3 == 0:
-                # ellipse
-                x0 = randint(-1 * xinc, x - (xinc * 1))
-                x1 = randint(x0 + xinc, x)
-                y0 = randint(-1 * y * 2, yinc * 2)
-                y1 = randint(y // 2 + yinc, y + (y // 2))
-                draw.ellipse((x0, y0, x1, y1), width=3)
-            else:
-                x0 = randint(0, x)
-                y0 = randint(0, y)
-                x1 = randint(0, x)
-                y1 = randint(0, y)
-                draw.line((x0, y0, x1, y1), width=3)
-        return im
+    def draw_lines(self, *args, **kwargs) -> Image:
+        """preserved for backwards compatibility"""
+        return new_draw_lines(*args, **kwargs)
 
     def create(self, length=None, digits=None) -> str:
         """Create a new CAPTCHA dict and add it to self.captchas"""
+        # backwards compatibility
         length = self.config['CAPTCHA_LENGTH'] if length is None else length
         add_digits = (
             self.config['CAPTCHA_DIGITS'] if digits is None else digits
@@ -114,40 +120,16 @@ class CAPTCHA:
             length=length, add_digits=add_digits, charpool=self.characters
         )
 
-        size = 30
-        width, height = length * size, size
-
-        base = Image.new('RGBA', (width, height), color=(0, 0, 0, 0))
-
-        txt = Image.new('RGBA', base.size, color=(0, 0, 0, 255))
-
-        f_path = os.path.dirname(os.path.realpath(__file__))
-        f_path = os.path.join(f_path, 'arial.ttf')
-        fnt = ImageFont.truetype(f_path, size)
-
-        d = ImageDraw.Draw(txt)
-
-        d.text((0, 0), text, font=fnt, fill=(255, 255, 255, 255))
-
-        text_img = Image.alpha_composite(base, txt)
-
-        text_size = (int(text_img.size[0] * 0.75), int(text_img.size[1] * 1))
-
-        background = self.get_background(text_size)
-
-        background.paste(
-            text_img,
-            box=(
-                random.randint(0, background.size[0] - text_size[0]),
-                random.randint(0, background.size[1] - text_size[1]),
-            ),
+        out_img = create_text_img(
+            text,
+            rchoice(self.fonts).path,
+            self.font_size,
+            self.vary_font_range,
+            self.vary_font_size,
         )
 
-        out_img = background.resize((200, 60))
-        out_img = self.draw_lines(out_img)
-
         return {
-            'img': convert_b64img(out_img),
+            'img': self.convert_b64img(out_img, self.img_format),
             'text': text,
             'hash': jwtencrypt(
                 text, self.secret, expire_seconds=self.expire_secs
@@ -191,16 +173,15 @@ class CAPTCHA:
     def captcha_html(self, captcha: dict) -> str:
         """
         Generate HTML for the CAPTCHA image and input fields.
-
         Args:
             captcha (dict): captcha dict with hash/img keys
-
         Returns:
             str: HTML string containing the CAPTCHA image and input fields.
         """
+        mimetype = 'image/png' if self.img_format == 'PNG' else 'image/jpeg'
         img = (
             '<img class="simple-captcha-img" '
-            + 'src="data:image/png;base64, %s" />' % captcha['img']
+            + 'src="data:%s;base64, %s" />' % (mimetype, captcha['img'])
         )
 
         inpu = (
