@@ -37,6 +37,9 @@ def draw_lines(im: Image, lines: int = 6) -> Image:
     xinc = int(x / 10)
     yinc = int(y / 10)
 
+    lowx_range = range(0, x // 3)
+    highx_range = range(x // 3, x)
+
     for i in range(lines):
         if i % 3 == 0:
             # ellipse
@@ -46,12 +49,18 @@ def draw_lines(im: Image, lines: int = 6) -> Image:
             y1 = ran.randint(y // 2 + yinc, y + (y // 2))
             draw.ellipse((x0, y0, x1, y1), width=3)
         else:
-            x0 = ran.randint(0, x // 2)
-            y0 = ran.randint(0, y // 2)
-            x1 = ran.randint(0, x)
-            y1 = ran.randint(y // 2, y)
+            xlowhigh = ran.choice([lowx_range, highx_range])
+            x0 = ran.choice(xlowhigh)
+            y0 = ran.randint(0, y // 5)
 
-            draw.line((x0, y0, x1, y1), width=ran.randint(3, 4))
+            if xlowhigh == lowx_range:
+                x1 = ran.choice(highx_range)
+            else:
+                x1 = ran.choice(lowx_range)
+
+            y1 = ran.randint(y - (y // 5), y)
+
+            draw.line((x0, y0, x1, y1), width=3)
     return im
 
 

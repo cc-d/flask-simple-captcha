@@ -32,10 +32,14 @@ def submit_captcha():
 @app.route('/images')
 def bulk_captchas():
     num = 50
-    captchas = [CAPTCHA.create() for _ in range(int(num))]
+    captchas = [CAPTCHA.create() for _ in range(num)]
+    mimetype = 'image/png' if CAPTCHA.img_format == 'PNG' else 'image/jpeg'
     captchas = [
-        '<img src="data:image/png;base64, %s" />' % c['img'] for c in captchas
+        '<img class="simple-captcha-img" '
+        + 'src="data:%s;base64, %s" />' % (mimetype, c['img'])
+        for c in captchas
     ]
+
     style = '<style>img display: inline-block; margin: 8px;</style>'
     return style + '\n'.join(captchas)
 
