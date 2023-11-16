@@ -14,7 +14,10 @@ app = CAPTCHA.init_app(app)
 def submit_captcha():
     if request.method == 'GET':
         captcha_dict = CAPTCHA.create()
-        return render_template_string(CAPTCHA.captcha_html(captcha_dict))
+        capinput = CAPTCHA.captcha_html(captcha_dict)
+        return render_template_string(
+            '<form method="POST">%s<input type="submit"></form>' % capinput
+        )
     if request.method == 'POST':
         c_hash = request.form.get('captcha-hash')
         c_text = request.form.get('captcha-text')

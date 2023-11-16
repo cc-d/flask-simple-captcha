@@ -4,3 +4,5 @@ Flask<3
 pyjwt<3,>=2
 black
 isort
+pytest
+pytest-cov

@@ -1,6 +1,6 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v5.2.3**
+### CURRENT VERSION: **v5.3.0**
 
 **v5.0.0+ added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
 
@@ -37,16 +37,16 @@ Import this package directly into your Flask project and make sure to install al
 
 ```python
 DEFAULT_CONFIG = {
-    'SECRET_CAPTCHA_KEY': 'LONG SECRET KEY HERE',  # use for JWT encoding/decoding
-    'CAPTCHA_LENGTH': 6,  # Length of the generated CAPTCHA text
-    'CAPTCHA_DIGITS': False,  # Should digits be added to the character pool?
-    # EXPIRE_SECONDS will take prioritity over EXPIRE_MINUTES if both are set.
-    'EXPIRE_SECONDS': 60 * 10,
-    #'EXPIRE_MINUTES': 10, # backwards compatibility concerns supports this too
-    #'EXCLUDE_VISUALLY_SIMILAR': True,  # Optional
-    #'ONLY_UPPERCASE': True,  # Optional
-    #'CHARACTER_POOL': 'AaBb',  # Optional
+    'SECRET_CAPTCHA_KEY': 'LONG_KEY', # Used for JWT encoding/
+    'CAPTCHA_LENGTH': 6 # CAPTCHA text length
+    'CAPTCHA_DIGITS': False # Include digits in the character pool?
+    'EXPIRE_SECONDS': 600 # CAPTCHA expiration time in seconds
+    # 'EXPIRE_MINUTES': 10 # Also supported for backwards compatibility
+    # 'EXCLUDE_VISUALLY_SIMILAR': True # Optional exclude visually similar characters like 0OIl
+    # 'ONLY_UPPERCASE': True # Optional only use uppercase characters
+    # 'CHARACTER_POOL': 'AaBbCc123' # Optional specify character pool
 }
+
 ```
 
 ### Initialization
@@ -55,13 +55,19 @@ Add this code snippet at the top of your application:
 
 ```python
 from flask_simple_captcha import CAPTCHA
-SIMPLE_CAPTCHA = CAPTCHA(config=config.CAPTCHA_CONFIG)
+YOUR_CONFIG = {
+    'SECRET_CAPTCHA_KEY': 'LONG_KEY',
+    'CAPTCHA_LENGTH': 6,
+    'CAPTCHA_DIGITS': False,
+    'EXPIRE_SECONDS': 600,
+}
+SIMPLE_CAPTCHA = CAPTCHA(config=YOUR_CONFIG)
 app = SIMPLE_CAPTCHA.init_app(app)
 ```
 
 ### Example Captcha Images
 
-Here is an example of what the generated CAPTCHA images look like:
+Here is an example of what the generated CAPTCHA images look like, this is a screen shot from the /images route of the debug server.
 
 ![Example CAPTCHA Image](/captcha-example.PNG)
 
@@ -92,39 +98,6 @@ In your HTML template, you need to wrap the CAPTCHA inputs within a form element
   {{ captcha_html(captcha)|safe }}
   <input type="submit" value="Submit" />
 </form>
-```
-
-## Debugging
-
-You can run `debug_flask_server.py` for minimal testing on port `5000`. This allows you to test the generated CAPTCHA HTML and submission behavior.
-
-```bash
-# Might want to use venv
-pip3 install -r requirements_dev.txt
-
-python3 debug_flask_server.py
-```
-
-To generate multiple images to test the image generation patterns, you can visit `localhost:5000/images` to view 50 generated images at a time.
-
-## Running Tests
-
-1. Install the development requirements:
-
-```bash
-pip install -r requirements_dev.txt
-```
-
-2. Run the tests:
-
-```bash
-python3 tests.py
-```
-
-or
-
-```bash
-python3 -m unittest tests.py
 ```
 
 ## Encryption and Decryption Breakdown
@@ -166,6 +139,149 @@ Uses a combination of JWTs and Werkzeug's password hashing to encrypt and decryp
    if check_password_hash(hashed_text, salted_original_text):
        return original_text
    ```
+
+# Development
+
+### Setting Up Your Development Environment Without VS Code
+
+1. **Create a Virtual Environment:**
+
+   - Navigate to the project directory where you've cloned the repository and create a virtual environment named `venv` within the project directory:
+
+     ```bash
+     python -m venv venv/
+     ```
+
+2. **Activate the Virtual Environment:**
+
+   - Activate the virtual environment to isolate the project dependencies:
+     - On macOS/Linux:
+       ```bash
+       source venv/bin/activate
+       ```
+     - On Windows (using Command Prompt):
+       ```cmd
+       .\venv\Scripts\activate
+       ```
+     - On Windows (using PowerShell):
+       ```powershell
+       .\venv\Scripts\Activate.ps1
+       ```
+
+3. **Install Dependencies:**
+
+   Install the required dependencies for development:
+
+   ```bash
+   pip install -r requirements_dev.txt
+   ```
+
+   Install the local flask-simple-captcha package:
+
+   ```bash
+   pip install .
+   ```
+
+## Running Tests
+
+#### ENSURE YOU HAVE A VENV NAMED `venv` IN THE PROJECT DIRECTORY AND THAT IT IS ACTIVATED AND BOTH THE DEPENDENCIES AND THE LOCAL FLASK-SIMPLE-CAPTCHA PACKAGE ARE INSTALLED IN THE VENV
+
+### Run Tests Without VS Code
+
+- Run the tests using the following command (make sure your venv is activated and you are in the project directory)
+  ```bash
+  python -m pytest tests.py -s -vv --cov --cov-report term-missing
+  ```
+- The command runs pytest with flags for verbose output, standard output capture, coverage report, and displaying missing lines in the coverage.
+
+### Running Tests With VS Code
+
+Simply hit command + shift + p and type "Select And Start Debugging" and select `Python: Run tests`. You will want to make sure your venv is installed and activated.
+
+### Example Test Output
+
+```bash
+===== test session starts =====
+flask-simple-captcha/venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/mym2/flask-simple-captcha
+plugins: cov-4.1.0
+collected 19 items
+
+tests.py::TestCAPTCHA::test_arg_order PASSED
+tests.py::TestCAPTCHA::test_backwards_defaults PASSED
+tests.py::TestCAPTCHA::test_captcha_html PASSED
+tests.py::TestCAPTCHA::test_convert_b64img PASSED
+tests.py::TestCAPTCHA::test_create PASSED
+tests.py::TestCAPTCHA::test_get_background PASSED
+tests.py::TestCAPTCHA::test_init_app PASSED
+tests.py::TestCAPTCHA::test_jwt_expiration PASSED
+tests.py::TestCAPTCHA::test_repr PASSED
+tests.py::TestCAPTCHA::test_reversed_args PASSED
+tests.py::TestCAPTCHA::test_verify_duplicate PASSED
+tests.py::TestCAPTCHA::test_verify_invalid PASSED
+tests.py::TestCAPTCHA::test_verify_valid PASSED
+tests.py::TestCaptchaUtils::test_exclude_similar_chars PASSED
+tests.py::TestCaptchaUtils::test_gen_captcha_text PASSED
+tests.py::TestCaptchaUtils::test_hashed_text PASSED
+tests.py::TestCaptchaUtils::test_jwtdecrypt_invalid_token PASSED
+tests.py::TestCaptchaUtils::test_jwtdecrypt_valid_token PASSED
+tests.py::TestCaptchaUtils::test_jwtencrypt PASSED
+
+---- coverage: platform darwin, python 3.11.5-final-0 ----
+Name                                         Stmts   Miss  Cover   Missing
+--------------------------------------------------------------------------
+__init__.py                                      0      0   100%
+flask_simple_captcha/__init__.py                 3      0   100%
+flask_simple_captcha/captcha_generation.py     103     10    90%   38-46, 49, 57-58, 64, 193
+flask_simple_captcha/config.py                   8      1    88%   23
+flask_simple_captcha/utils.py                   59      3    95%   81, 110, 112
+tests.py                                       135      1    99%   198
+--------------------------------------------------------------------------
+TOTAL                                          308     15    95%
+
+
+============== 19 passed in 5.24s ==============
+```
+
+## Debug Server
+
+#### **Start the debug server without VS Code**
+
+1. **Set Environment Variables:**
+
+   - Before running the debug Flask server, set the required environment variables:
+   - On macOS/Linux:
+     ```bash
+     export FLASK_APP=debug_flask_server
+     export FLASK_DEBUG=1
+     ```
+   - On Windows (using Command Prompt):
+     ```cmd
+     set FLASK_APP=debug_flask_server
+     set FLASK_DEBUG=1
+     ```
+   - On Windows (using PowerShell):
+     ```powershell
+     $env:FLASK_APP="debug_flask_server"
+     $env:FLASK_DEBUG="1"
+     ```
+
+2. **Start the debug Flask server:**
+   - Run the following command to start the debug Flask server:
+     ```bash
+     flask run --no-debugger
+     ```
+   - This will start the debug Flask server with debugging features enabled, including the interactive debugger and automatic reloader. See the navigation section below on how to access the debug server.
+
+#### **Start the debug server with VS Code**
+
+- Hit command + shift + p and type "Select And Start Debugging" and select `Python: Flask`
+- This will start the debug Flask server with debugging features enabled, including the interactive debugger and automatic reloader.
+
+### Accessing the Debug Server
+
+Navigate to `localhost:5000` in your browser to view the debug server.
 
 ## Contributing
 

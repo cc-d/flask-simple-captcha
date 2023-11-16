@@ -4,3 +4,5 @@ flask_simple_captcha.egg-info/
 *.pyc
 __pycache__/
 venv/
+.coverage
+.coverage*
