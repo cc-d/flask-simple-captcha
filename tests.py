@@ -349,11 +349,11 @@ class TestText(unittest.TestCase):
         self.assertEqual(repr(font), '<CaptchaFont %r>' % _name)
 
     def test_get_font(self):
-        font = get_font('arial', self.fonts)
+        font = get_font('RobotoMono-Bold', self.fonts)
         self.assertIsInstance(font, CaptchaFont)
 
     def test_get_font_by_filename(self):
-        font = get_font('arial.ttf', self.fonts)
+        font = get_font('RobotoMono-Bold.ttf', self.fonts)
         self.assertIsInstance(font, CaptchaFont)
 
     def test_get_font_by_path(self):

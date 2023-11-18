@@ -14,10 +14,6 @@ DEFAULT_CONFIG = {
     'CAPTCHA_LENGTH': 6,  # Length of the generated CAPTCHA text
     'CAPTCHA_DIGITS': False,  # Should digits be added to the character pool?
     'EXCLUDE_VISUALLY_SIMILAR': True,  # Exclude visually similar characters
-    'TEXT_FONT_SIZE': 30,  # Font size of the CAPTCHA text
-    'VARY_FONT_SIZE': True,  # Vary the font size of the CAPTCHA text
-    'VARY_FONT_RANGE': 2,  # Range of font size variation up/down
-    #
     # Optional/Backwards Compatability settings
     #'USE_TEXT_FONTS': ['arial', 'roboto-mono'], # Only use these fonts in ./fonts
     #'EXPIRE_MINUTES': 10, # backwards compatibility concerns supports this too
@@ -27,3 +23,8 @@ DEFAULT_CONFIG = {
 }
 
 EXPIRE_NORMALIZED = DEFAULT_CONFIG['EXPIRE_SECONDS']
+
+# should add these to config and allow users to change them
+IMGHEIGHT = 60
+IMGWIDTH = 180
+FONTSIZE = 30

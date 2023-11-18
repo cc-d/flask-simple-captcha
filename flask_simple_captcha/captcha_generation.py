@@ -80,9 +80,6 @@ class CAPTCHA:
 
         # fonts
         self.fonts = CAPTCHA_FONTS
-        self.font_size = self.config['TEXT_FONT_SIZE']
-        self.vary_font_size = self.config['VARY_FONT_SIZE']
-        self.vary_font_range = self.config['VARY_FONT_RANGE']
 
         # if USE_TEXT_FONTS is set in config, only use those fonts
         if 'USE_TEXT_FONTS' in self.config:
@@ -120,13 +117,7 @@ class CAPTCHA:
             length=length, add_digits=add_digits, charpool=self.characters
         )
 
-        out_img = create_text_img(
-            text,
-            rchoice(self.fonts).path,
-            self.font_size,
-            self.vary_font_range,
-            self.vary_font_size,
-        )
+        out_img = create_text_img(text, rchoice(self.fonts).path)
 
         return {
             'img': self.convert_b64img(out_img, self.img_format),

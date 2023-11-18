@@ -1,10 +1,10 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v5.4.0**
+### CURRENT VERSION: **v5.5.0**
 
 **v5.0.0+ added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
 
-**v5.4.0+ added support for multiple fonts, variation in font size/family, PNG/JPEG img format support (with the default now being JPEG for performance reasons), more consistentency as to where the noise lines appeared, and the image creation code in general was refactored and optimized.**
+**v5.5.0+ added slight font variation, PNG/JPEG img format support (with the default now being JPEG for performance reasons), more consistentency as to where the noise lines appeared, and the image creation code in general was refactored and optimized.**
 
 `flask-simple-captcha` is a CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 

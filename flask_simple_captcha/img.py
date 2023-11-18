@@ -5,7 +5,7 @@ from PIL import Image, ImageDraw, ImageFont
 from io import BytesIO
 from base64 import b64encode
 from .utils import gen_captcha_text, jwtencrypt
-from .config import DEFAULT_CONFIG as _DEF
+from .config import DEFAULT_CONFIG as _DEF, IMGHEIGHT, IMGWIDTH, FONTSIZE
 from .text import CaptchaFont
 
 
@@ -30,46 +30,52 @@ def convert_b64img(
     return b64encode(byte_array.getvalue()).decode()
 
 
-def draw_lines(im: Image, lines: int = 6) -> Image:
+def draw_lines(
+    im: Image, lines: int = 6, draw: Optional[ImageDraw.ImageDraw] = None
+) -> None:
     """draws the background lines behind captcha text img"""
-    draw = ImageDraw.Draw(im)
-    x, y = im.size
-    xinc = int(x / 10)
-    yinc = int(y / 10)
+    if draw is None:
+        draw = ImageDraw.Draw(im)
 
-    lowx_range = range(0, x // 3)
-    highx_range = range(x // 3, x)
+    w, h = im.size
+    xinc = w // lines
+    yinc = h // 10
 
-    for i in range(lines):
-        if i % 3 == 0:
-            # ellipse
-            x0 = ran.randint(-1 * xinc, x - (xinc * 1))
-            x1 = ran.randint(x0 + xinc, x)
-            y0 = ran.randint(-1 * y * 2, yinc * 2)
-            y1 = ran.randint(y // 2 + yinc, y + (y // 2))
+    max_circles = ran.randint(1, 2)
+    max_lines = lines - max_circles
+
+    ranmap = ['c' for c in range(0, max_circles)] + [
+        'l' for l in range(0, max_lines)
+    ]
+    ran.shuffle(ranmap)
+
+    for i, v in enumerate(ranmap):
+        startx = xinc * i
+        # 1/3 chance of drawing an ellipse
+        if v == 'c':
+            x0 = ran.randint(startx, startx + xinc)
+            y0 = ran.randint(0, h // 2)
+
+            x1 = ran.randint(x0 + xinc, x0 + xinc * 2)
+            y1 = ran.randint(h - yinc * 2, h + yinc * 2)
+
             draw.ellipse((x0, y0, x1, y1), width=3)
+        # 2/3 chance of drawing a line
         else:
-            xlowhigh = ran.choice([lowx_range, highx_range])
-            x0 = ran.choice(xlowhigh)
-            y0 = ran.randint(0, y // 5)
+            x0 = ran.randint(startx - xinc, startx + xinc)
+            y0 = ran.randint(0, h // 3)
 
-            if xlowhigh == lowx_range:
-                x1 = ran.choice(highx_range)
-            else:
-                x1 = ran.choice(lowx_range)
+            xdist = ran.randint(-xinc * 1, xinc * 1)
 
-            y1 = ran.randint(y - (y // 5), y)
+            x1 = x0 + xdist
+            y1 = ran.randint(h // 2, h)
 
             draw.line((x0, y0, x1, y1), width=3)
     return im
 
 
 def create_text_img(
-    text: str,
-    font_path: str,
-    font_size: int = _DEF['TEXT_FONT_SIZE'],
-    vary_font_size: bool = _DEF['VARY_FONT_SIZE'],
-    vary_font_range: int = _DEF['VARY_FONT_RANGE'],
+    text: str, font_path: str, font_size: int = FONTSIZE
 ) -> Image:
     """Create a PIL image of the CAPTCHA text.
     Args:
@@ -77,29 +83,24 @@ def create_text_img(
         font_path (str): The path to the font to be used.
         img_format (str): The image format to be used.
             Defaults to 'JPEG'
-        font_size (int): The font size to be used.
-            Defaults to 30
-        vary_font_size (bool, optional): Should the font size be varied?
-            Defaults to True
-        vary_font_range (int, optional): The range of font size variation.
-            Defaults to 2
     """
-    width, height = (font_size * len(text), font_size * 2)
-    ranx, rany = (ran.randint(0, font_size), ran.randint(0, font_size))
-    if vary_font_size:
-        font_size_range = tuple(
-            i for i in range(-vary_font_range, vary_font_range + 1)
-        )
-        font_size = font_size + ran.choice(font_size_range)
-
-    imgtxt = Image.new('RGB', (width, height), color=(0, 0, 0, 255))
-
+    # roboto mono assumed to be 0.75x width of $size * char width
+    txt_w, txt_h = (int((font_size * len(text)) * 0.6), int(font_size))
     fnt = ImageFont.truetype(font_path, font_size)
-    drawer = ImageDraw.Draw(imgtxt)
+
+    # background should be slightly larger than text
+    back_w, back_h = (int(txt_w * 1.25), int(txt_h * 1.5))
+
+    back_img = Image.new('RGB', (back_w, back_h), color=(0, 0, 0))
+    drawer = ImageDraw.Draw(back_img)
+
+    ranx = ran.randint(0, back_w - txt_w)
+    rany = ran.randint(0, back_h - txt_h - 5)
 
     drawer.text((ranx, rany), text, font=fnt, fill=(255, 255, 255, 255))
 
-    imgtxt.resize((180, 60))
-    out_img = draw_lines(imgtxt)
+    back_img = draw_lines(back_img, draw=drawer)
 
-    return out_img
+    back_img = back_img.resize((IMGWIDTH, IMGHEIGHT))
+
+    return back_img
