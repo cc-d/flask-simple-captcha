@@ -30,47 +30,41 @@ def convert_b64img(
     return b64encode(byte_array.getvalue()).decode()
 
 
-def draw_lines(
-    im: Image, lines: int = 6, draw: Optional[ImageDraw.ImageDraw] = None
-) -> None:
-    """draws the background lines behind captcha text img"""
+def draw_lines(im: Image, lines: int = 12, draw: ImageDraw = None) -> Image:
+    """Draws complex background noise on the image with an equal number of lines and ellipses."""
     if draw is None:
         draw = ImageDraw.Draw(im)
-
     w, h = im.size
-    xinc = w // lines
-    yinc = h // 10
 
-    max_circles = ran.randint(1, 2)
-    max_lines = lines - max_circles
+    # Calculate the number of lines and ellipses
+    num_shapes = lines // 2
 
-    ranmap = ['c' for c in range(0, max_circles)] + [
-        'l' for l in range(0, max_lines)
+    # Generate unique start points for lines in a grid to avoid overlap
+    line_starts = [
+        (ran.randint(0, w), ran.randint(0, h)) for _ in range(num_shapes)
     ]
-    ran.shuffle(ranmap)
 
-    for i, v in enumerate(ranmap):
-        startx = xinc * i
-        # 1/3 chance of drawing an ellipse
-        if v == 'c':
-            x0 = ran.randint(startx, startx + xinc)
-            y0 = ran.randint(0, h // 2)
+    # Draw lines
+    for i in range(0, len(line_starts) - 1, 2):
+        x0, y0 = line_starts[i]
+        x1, y1 = line_starts[i + 1]
+        draw.line((x0, y0, x1, y1), fill=(255, 255, 255), width=2)
 
-            x1 = ran.randint(x0 + xinc, x0 + xinc * 2)
-            y1 = ran.randint(h - yinc * 2, h + yinc * 2)
+    # Generate unique center points for ellipses in a grid to avoid overlap
+    ellipse_centers = [
+        (ran.randint(0, w), ran.randint(0, h)) for _ in range(num_shapes)
+    ]
 
-            draw.ellipse((x0, y0, x1, y1), width=3)
-        # 2/3 chance of drawing a line
-        else:
-            x0 = ran.randint(startx - xinc, startx + xinc)
-            y0 = ran.randint(0, h // 3)
+    # Draw ellipses
+    for center_x, center_y in ellipse_centers:
+        radius_x = ran.randint(4, w // 4)
+        radius_y = ran.randint(4, h // 4)
+        upper_left = (center_x - radius_x, center_y - radius_y)
+        lower_right = (center_x + radius_x, center_y + radius_y)
+        draw.ellipse(
+            (upper_left + lower_right), outline=(255, 255, 255), width=2
+        )
 
-            xdist = ran.randint(-xinc * 1, xinc * 1)
-
-            x1 = x0 + xdist
-            y1 = ran.randint(h // 2, h)
-
-            draw.line((x0, y0, x1, y1), width=3)
     return im
 
 
@@ -84,22 +78,48 @@ def create_text_img(
         img_format (str): The image format to be used.
             Defaults to 'JPEG'
     """
-    # roboto mono assumed to be 0.75x width of $size * char width
-    txt_w, txt_h = (int((font_size * len(text)) * 0.6), int(font_size))
+    # roboto mono assumed to be 0.6x width of $size * char width
+    char_w = round(font_size * 0.6)
+    actual_txt_w = len(text) * char_w
+    txt_w = font_size * len(text)
+    txt_h = font_size
+
     fnt = ImageFont.truetype(font_path, font_size)
 
     # background should be slightly larger than text
-    back_w, back_h = (int(txt_w * 1.25), int(txt_h * 1.5))
+    back_w, back_h = (round(actual_txt_w * 1.25), round(txt_h * 1.5))
 
+    # each char is randomly placed in a segment of the background
+    txt_seg_w = int(back_w / len(text))  # rounds down
+
+    # gap between background h/w and text h/w
+    seg_gap_h = int(back_h - txt_h)  # rounds down
+
+    # create background image
     back_img = Image.new('RGB', (back_w, back_h), color=(0, 0, 0))
+
+    # only initialize drawer once
     drawer = ImageDraw.Draw(back_img)
 
-    ranx = ran.randint(0, back_w - txt_w)
-    rany = ran.randint(0, back_h - txt_h - 5)
+    char_chords = []
 
-    drawer.text((ranx, rany), text, font=fnt, fill=(255, 255, 255, 255))
+    for i, c in enumerate(text):
+        startx = i * txt_seg_w
+        endx = startx + (txt_seg_w - char_w)
+        # roboto mono seems to appear slightly under the baseline
+        starty = -5
+        endy = seg_gap_h - 5
 
-    back_img = draw_lines(back_img, draw=drawer)
+        print(startx, starty, endx, endy)
+        ranx = ran.randint(startx, endx)
+        rany = ran.randint(starty, endy)
+
+        char_chords.append((ranx, rany))
+
+        drawer.text((ranx, rany), c, font=fnt, fill=(255, 255, 255, 255))
+
+    # 6 minimum
+    back_img = draw_lines(back_img, lines=16, draw=drawer)
 
     back_img = back_img.resize((IMGWIDTH, IMGHEIGHT))
 
