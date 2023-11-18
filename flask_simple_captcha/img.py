@@ -30,18 +30,15 @@ def convert_b64img(
     return b64encode(byte_array.getvalue()).decode()
 
 
-def draw_lines(im: Image, lines: int = 12, draw: ImageDraw = None) -> Image:
-    """Draws complex background noise on the image with an equal number of lines and ellipses."""
+def draw_lines(im: Image, noise: int = 12, draw: ImageDraw = None) -> Image:
+    """Draws complex background noise on the image."""
     if draw is None:
         draw = ImageDraw.Draw(im)
     w, h = im.size
 
-    # Calculate the number of lines and ellipses
-    num_shapes = lines // 2
-
-    # Generate unique start points for lines in a grid to avoid overlap
     line_starts = [
-        (ran.randint(0, w), ran.randint(0, h)) for _ in range(num_shapes)
+        (ran.randint(0, w), ran.randint(0, h))
+        for _ in range(int(noise * 0.66) * 2)
     ]
 
     # Draw lines
@@ -50,9 +47,9 @@ def draw_lines(im: Image, lines: int = 12, draw: ImageDraw = None) -> Image:
         x1, y1 = line_starts[i + 1]
         draw.line((x0, y0, x1, y1), fill=(255, 255, 255), width=2)
 
-    # Generate unique center points for ellipses in a grid to avoid overlap
     ellipse_centers = [
-        (ran.randint(0, w), ran.randint(0, h)) for _ in range(num_shapes)
+        (ran.randint(0, w), ran.randint(0, h))
+        for _ in range(int(noise * 0.33))
     ]
 
     # Draw ellipses
@@ -110,7 +107,6 @@ def create_text_img(
         starty = -5
         endy = seg_gap_h - 5
 
-        print(startx, starty, endx, endy)
         ranx = ran.randint(startx, endx)
         rany = ran.randint(starty, endy)
 
@@ -119,7 +115,7 @@ def create_text_img(
         drawer.text((ranx, rany), c, font=fnt, fill=(255, 255, 255, 255))
 
     # 6 minimum
-    back_img = draw_lines(back_img, lines=16, draw=drawer)
+    back_img = draw_lines(back_img, noise=12, draw=drawer)
 
     back_img = back_img.resize((IMGWIDTH, IMGHEIGHT))
 
