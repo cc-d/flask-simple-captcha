@@ -25,5 +25,6 @@ setup(
     ],
     packages=find_packages(exclude=('tests',)),
     include_package_data=True,
+    package_data={'flask_simple_captcha': ['fonts/*']},
     install_requires=['Werkzeug<3,>=0.16.0', 'Pillow>4, <10', 'pyjwt<3,>=2'],
 )
