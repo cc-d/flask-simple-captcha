@@ -1,10 +1,12 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v5.5.1**
+### CURRENT VERSION: **v5.5.2**
 
 **v5.0.0+ added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
 
 **v5.5.1** changed the noise generation to ensure that the captcha text is easier to read for humans, since the ai tools are pretty good at reading the text regardless of the noise.
+
+**v5.5.2** fixed a bug where the fonts files were not being included in the package when installed via pip. thank you @timeeeee for the PR
 
 `flask-simple-captcha` is a CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 
@@ -103,6 +105,8 @@ In your HTML template, you need to wrap the CAPTCHA inputs within a form element
 Here is an example of what the generated CAPTCHA images look like, this is a screen shot from the `/images` route of the debug server.
 
 ![Example CAPTCHA Image](/captcha-example.PNG)
+
+[link to image url if the above does not load](https://github.com/cc-d/flask-simple-captcha/blob/master/captcha-example.PNG)
 
 ## Encryption and Decryption Breakdown
 
