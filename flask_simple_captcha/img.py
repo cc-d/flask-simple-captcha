@@ -30,10 +30,20 @@ def convert_b64img(
     return b64encode(byte_array.getvalue()).decode()
 
 
-def draw_lines(im: Image, noise: int = 12, draw: ImageDraw = None) -> Image:
+RGBAType = Union[Tuple[int, int, int, int], Tuple[int, int, int]]
+
+
+def draw_lines(
+    im: Image,
+    noise: int = 12,
+    text_color: RGBAType = (255, 255, 255),
+    **kwargs,
+) -> Image:
     """Draws complex background noise on the image."""
+    draw = kwargs.get('draw', None)
     if draw is None:
         draw = ImageDraw.Draw(im)
+
     w, h = im.size
 
     line_starts = [
@@ -45,7 +55,7 @@ def draw_lines(im: Image, noise: int = 12, draw: ImageDraw = None) -> Image:
     for i in range(0, len(line_starts) - 1, 2):
         x0, y0 = line_starts[i]
         x1, y1 = line_starts[i + 1]
-        draw.line((x0, y0, x1, y1), fill=(255, 255, 255), width=2)
+        draw.line((x0, y0, x1, y1), fill=text_color, width=2)
 
     ellipse_centers = [
         (ran.randint(0, w), ran.randint(0, h))
@@ -58,15 +68,17 @@ def draw_lines(im: Image, noise: int = 12, draw: ImageDraw = None) -> Image:
         radius_y = ran.randint(4, h // 4)
         upper_left = (center_x - radius_x, center_y - radius_y)
         lower_right = (center_x + radius_x, center_y + radius_y)
-        draw.ellipse(
-            (upper_left + lower_right), outline=(255, 255, 255), width=2
-        )
+        draw.ellipse((upper_left + lower_right), outline=text_color, width=2)
 
     return im
 
 
 def create_text_img(
-    text: str, font_path: str, font_size: int = FONTSIZE
+    text: str,
+    font_path: str,
+    font_size: int = FONTSIZE,
+    back_color: RGBAType = (0, 0, 0, 255),
+    text_color: RGBAType = (255, 255, 255),
 ) -> Image:
     """Create a PIL image of the CAPTCHA text.
     Args:
@@ -74,6 +86,12 @@ def create_text_img(
         font_path (str): The path to the font to be used.
         img_format (str): The image format to be used.
             Defaults to 'JPEG'
+        back_color (RGBAType): The background color to be used.
+            Defaults to (0, 0, 0, 255)
+        text_color (RGBAType): The text color to be used.
+            Defaults to (255, 255, 255)
+    Returns:
+        Image: The PIL image of the CAPTCHA text.
     """
     # roboto mono assumed to be 0.6x width of $size * char width
     char_w = round(font_size * 0.6)
@@ -93,7 +111,7 @@ def create_text_img(
     seg_gap_h = int(back_h - txt_h)  # rounds down
 
     # create background image
-    back_img = Image.new('RGB', (back_w, back_h), color=(0, 0, 0))
+    back_img = Image.new('RGB', (back_w, back_h), color=back_color)
 
     # only initialize drawer once
     drawer = ImageDraw.Draw(back_img)
@@ -112,10 +130,12 @@ def create_text_img(
 
         char_chords.append((ranx, rany))
 
-        drawer.text((ranx, rany), c, font=fnt, fill=(255, 255, 255, 255))
+        drawer.text((ranx, rany), c, font=fnt, fill=text_color)
 
     # 6 minimum
-    back_img = draw_lines(back_img, noise=12, draw=drawer)
+    back_img = draw_lines(
+        back_img, noise=12, draw=drawer, text_color=text_color
+    )
 
     back_img = back_img.resize((IMGWIDTH, IMGHEIGHT))
 

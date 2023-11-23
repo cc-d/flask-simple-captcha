@@ -1,12 +1,12 @@
 # flask-simple-captcha
 
-### CURRENT VERSION: **v5.5.2**
+### CURRENT VERSION: **v5.5.3**
 
 **v5.0.0+ added an encryption mechanism to the stored text in the jwts. Previous versions are insecure!**
 
 **v5.5.1** changed the noise generation to ensure that the captcha text is easier to read for humans, since the ai tools are pretty good at reading the text regardless of the noise.
 
-**v5.5.2** fixed a bug where the fonts files were not being included in the package when installed via pip. thank you @timeeeee for the PR
+**5.5.3 added support for custom text|noise/background colors**
 
 `flask-simple-captcha` is a CAPTCHA generator class for generating and validating CAPTCHAs. It allows for easy integration into Flask applications.
 
@@ -26,6 +26,7 @@ See the encryption / decryption breakdown below for more information on the veri
 - Casing of submitted captcha is ignored by default
 - Minor random font variation in regards to size/family/etc
 - PNG/JPEG image format support
+- Customizable text|noise/background colors
 
 ## Prerequisites
 
@@ -43,14 +44,22 @@ Import this package directly into your Flask project and make sure to install al
 
 ```python
 DEFAULT_CONFIG = {
-    'SECRET_CAPTCHA_KEY': 'LONG_KEY', # Used for JWT encoding/
-    'CAPTCHA_LENGTH': 6 # CAPTCHA text length
-    'CAPTCHA_DIGITS': False # Include digits in the character pool?
-    'EXPIRE_SECONDS': 600 # CAPTCHA expiration time in seconds
-    # 'EXPIRE_MINUTES': 10 # Also supported for backwards compatibility
-    # 'EXCLUDE_VISUALLY_SIMILAR': True # Optional exclude visually similar characters like 0OIl
-    # 'ONLY_UPPERCASE': True # Optional only use uppercase characters
-    # 'CHARACTER_POOL': 'AaBbCc123' # Optional specify character pool
+    'SECRET_CAPTCHA_KEY': 'LONGKEY',  # use for JWT encoding/decoding
+
+    # CAPTCHA GENERATION SETTINGS
+    'EXPIRE_SECONDS': 60 * 10,  # takes precedence over EXPIRE_MINUTES
+    'CAPTCHA_IMG_FORMAT': 'JPEG',  # 'PNG' or 'JPEG' (JPEG is 3X faster)
+
+    # CAPTCHA TEXT SETTINGS
+    'CAPTCHA_LENGTH': 6,  # Length of the generated CAPTCHA text
+    'CAPTCHA_DIGITS': False,  # Should digits be added to the character pool?
+    'EXCLUDE_VISUALLY_SIMILAR': True,  # Exclude visually similar characters
+    'BACKGROUND_COLOR': (0, 0, 0),  # RGB(A?) background color (default black)
+    'TEXT_COLOR': (255, 255, 255),  # RGB(A?) text color (default white)
+
+    # Optional settings
+    #'ONLY_UPPERCASE': True, # Only use uppercase characters
+    #'CHARACTER_POOL': 'AaBb',  # Use a custom character pool
 }
 
 ```

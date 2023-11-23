@@ -108,8 +108,12 @@ class CAPTCHA:
         text = gen_captcha_text(
             length=length, add_digits=add_digits, charpool=self.characters
         )
-
-        out_img = create_text_img(text, rchoice(self.fonts).path)
+        out_img = create_text_img(
+            text,
+            rchoice(self.fonts).path,
+            back_color=self.config['BACKGROUND_COLOR'],
+            text_color=self.config['TEXT_COLOR'],
+        )
 
         return {
             'img': self.convert_b64img(out_img, self.img_format),

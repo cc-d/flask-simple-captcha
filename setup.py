@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os
 from setuptools import setup, find_packages
 
 with open('README.md', 'r') as r:
@@ -7,7 +6,7 @@ with open('README.md', 'r') as r:
 
 setup(
     name='flask-simple-captcha',
-    version='5.5.2',
+    version='5.5.3',
     description=(
         'Extremely simple, "Good Enough" captcha implemention for flask forms.'
         ' No server side session library required.'
