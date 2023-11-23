@@ -194,7 +194,7 @@ Uses a combination of JWTs and Werkzeug's password hashing to encrypt and decryp
 
 #### ENSURE YOU HAVE A VENV NAMED `venv` IN THE PROJECT DIRECTORY AND THAT IT IS ACTIVATED AND BOTH THE DEPENDENCIES AND THE LOCAL FLASK-SIMPLE-CAPTCHA PACKAGE ARE INSTALLED IN THE VENV
 
-As of the time of me writing this README (2023-11-15), pytest reports 97% test coverage of the logic in the `flask_simple_captcha` package. Should be kept as close to 100% as possible. If I hadn't spent the last 7 hours working on this, I'd do it tonight.
+As of the time of me writing this README (2023-11-15), pytest reports 97% test coverage of the logic in the `flask_simple_captcha` package. Should be kept as close to 100% as possible.
 
 ### Run Tests Without VS Code
 
@@ -216,20 +216,21 @@ Simply hit command + shift + p and type "Select And Start Debugging" and select 
 tests.py::TestCaptchaUtils::test_jwtencrypt PASSED
 tests.py::TestCaptchaUtils::test_no_hashed_text PASSED
 
+
 ---------- coverage: platform darwin, python 3.8.18-final-0 ----------
 Name                                         Stmts   Miss  Cover   Missing
 --------------------------------------------------------------------------
 flask_simple_captcha/__init__.py                 3      0   100%
-flask_simple_captcha/captcha_generation.py      89      5    94%   89-93
-flask_simple_captcha/config.py                   7      0   100%
-flask_simple_captcha/img.py                     46      1    98%   28
+flask_simple_captcha/captcha_generation.py      78      0   100%
+flask_simple_captcha/config.py                  10      0   100%
+flask_simple_captcha/img.py                     56      0   100%
 flask_simple_captcha/text.py                    25      0   100%
 flask_simple_captcha/utils.py                   51      0   100%
 --------------------------------------------------------------------------
-TOTAL                                          221      6    97%
+TOTAL                                          223      0   100%
 
 
-================= 38 passed in 4.28s =================
+==================================== 41 passed in 5.53s
 ```
 
 ## Debug Server

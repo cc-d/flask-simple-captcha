@@ -1,16 +1,8 @@
-import base64
-import random
 import string
-import os
-import sys
-import json
-from random import randint, choice as rchoice
-from datetime import datetime
-from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont
+from random import choice as rchoice
+from PIL import Image
 from typing import Tuple
 from uuid import uuid4
-from werkzeug.security import check_password_hash, generate_password_hash
 from .config import DEFAULT_CONFIG
 
 from .utils import (

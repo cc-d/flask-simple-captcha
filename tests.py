@@ -2,8 +2,10 @@ import unittest
 import time
 import jwt
 import string
+from io import BytesIO
+from base64 import b64encode
 from datetime import datetime, timedelta
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock, MagicMock, ANY
 
 from flask import Flask
 
@@ -100,6 +102,19 @@ class TestImg(unittest.TestCase):
         img = Image.new('RGB', (60, 30), color=(73, 109, 137))
         b64image = convert_b64img(img)
         self.assertIsInstance(b64image, str)
+
+    @patch('flask_simple_captcha.img.Image', autospec=True)
+    def test_save_png(self, mock_image):
+        img = Image.new('RGB', (1, 2), color=(1, 2, 3))
+        with patch.object(img, 'save') as mock_save:
+            convert_b64img(img, 'PNG')
+            mock_save.assert_called_once_with(ANY, format='PNG')
+
+    def test_nodrawer_lines(self):
+        im = Image.new('RGB', (100, 100))
+        with patch('flask_simple_captcha.img.ImageDraw') as mock_draw:
+            draw_lines(im)
+            mock_draw.Draw.assert_called_once_with(im)
 
 
 class TestCAPTCHA(unittest.TestCase):
@@ -363,6 +378,13 @@ class TestText(unittest.TestCase):
     def test_get_font_not_found(self):
         font = get_font('notfourqeqerfqwnd', self.fonts)
         self.assertIsNone(font)
+
+    def test_use_text_fonts(self):
+        conf = DEFAULT_CONFIG.copy()
+        conf['USE_TEXT_FONTS'] = ['RobotoMono-Bold']
+        cap = CAPTCHA(conf)
+        self.assertEqual(len(cap.fonts), 1)
+        self.assertEqual(cap.fonts[0].name, 'RobotoMono-Bold')
 
 
 class TestBackwardsCompatibleMethods(unittest.TestCase):
