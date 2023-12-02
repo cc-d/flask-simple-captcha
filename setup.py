@@ -6,7 +6,7 @@ with open('README.md', 'r') as r:
 
 setup(
     name='flask-simple-captcha',
-    version='5.5.3',
+    version='5.5.4',
     description=(
         'Extremely simple, "Good Enough" captcha implemention for flask forms.'
         ' No server side session library required.'
@@ -25,5 +25,5 @@ setup(
     packages=find_packages(exclude=('tests',)),
     include_package_data=True,
     package_data={'flask_simple_captcha': ['fonts/*']},
-    install_requires=['Werkzeug<3,>=0.16.0', 'Pillow>4, <10', 'pyjwt<3,>=2'],
+    install_requires=['Werkzeug>=0.16.0', 'Pillow>4', 'pyjwt<3,>=2'],
 )

@@ -1,7 +1,7 @@
-Werkzeug<3,>=0.16.0
-Pillow>4, <10
-Flask<3
+Werkzeug>=0.16.0
+Pillow>4
 pyjwt<3,>=2
+Flask
 black
 isort
 pytest
