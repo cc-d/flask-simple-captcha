@@ -277,7 +277,7 @@ TOTAL                                          223      0   100%
 
 Navigate to `localhost:5000` in your browser to view the debug server. You can also navigate to `localhost:5000/images` to view 50 CAPTCHA images at once.
 
-### Detailed Code Examples
+## Code Examples
 
 For usage and integration examples, including how to use `flask-simple-captcha` with WTForms and Flask-Security, check out the [Code Examples](code_examples.md) document.
 
