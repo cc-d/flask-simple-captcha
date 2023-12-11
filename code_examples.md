@@ -7,6 +7,7 @@ This document provides practical code examples for integrating `flask-simple-cap
 This example, contributed by [@TobiasTKranz](https://www.github.com/TobiasTKranz), demonstrates integrating `flask-simple-captcha` with WTForms and Flask-Security in a Flask application.
 
 ### Code to access Simple Captcha easily inside your project
+
 In order to access the Simple Captcha Extension you might connect it to the flask extensions dict like that:
 
 ```python
@@ -15,7 +16,6 @@ app.extensions.update({"flask-simple-captcha": SIMPLE_CAPTCHA})
 ```
 
 ### Code for Simple Captcha Field and Validation
-
 
 ```python
 import flask
@@ -37,36 +37,32 @@ class SimpleCaptchaWidget:
         return Markup(simple_captcha.captcha_html(captcha_dict))
 
 class SimpleCaptcha:
-    def __init__(self, message=None):
-        self.message = message
+    def __init__(self):
         self._simple_captcha = current_app.extensions.get("flask-simple-captcha")
 
     def __call__(self, form, field):
         if current_app.testing:
             return True
 
-        if request.is_json:
-            c_hash = request.json.get('captcha-hash')
-            c_text = request.json.get('captcha-text')
-        else:
-            c_hash = request.form.get('captcha-hash')
-            c_text = request.form.get('captcha-text')
+        request_data = request.json if request.is_json else request.form
+        c_hash = request_data.get('captcha-hash')
+        c_text = request_data.get('captcha-text')
 
         if not c_hash:
-            self.message = SIMPLE_CAPTCHA_ERROR_CODES["missing-input-hash"]
-            raise ValidationError(field.gettext(self.message))
-        if not c_text:
-            self.message = SIMPLE_CAPTCHA_ERROR_CODES["missing-input-response"]
-            raise ValidationError(field.gettext(self.message))
-
-        if not self._validate_simple_captcha(c_hash, c_text):
-            self.message = SIMPLE_CAPTCHA_ERROR_CODES["invalid-captcha-sol"]
-            raise ValidationError(field.gettext(self.message))
+            raise ValidationError(
+                SIMPLE_CAPTCHA_ERROR_CODES["missing-input-hash"]
+            )
+        elif not c_text:
+            raise ValidationError(
+                SIMPLE_CAPTCHA_ERROR_CODES["missing-input-response"]
+            )
+        elif not self._validate_simple_captcha(c_hash, c_text):
+            raise ValidationError(
+                SIMPLE_CAPTCHA_ERROR_CODES["invalid-captcha-sol"]
+            )
 
     def _validate_simple_captcha(self, c_hash, c_text):
-        if self._simple_captcha.verify(c_text, c_hash):
-            return True
-        return False
+        return self._simple_captcha.verify(c_text, c_hash)
 
 class SimpleCaptchaField(Field):
     widget = SimpleCaptchaWidget()
