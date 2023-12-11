@@ -4,9 +4,18 @@ This document provides practical code examples for integrating `flask-simple-cap
 
 ## Integration with WTForms and Flask-Security
 
-This example, contributed by Dr. Tobias T. Kranz, demonstrates integrating `flask-simple-captcha` with WTForms and Flask-Security in a Flask application.
+This example, contributed by [@TobiasTKranz](https://www.github.com/TobiasTKranz), demonstrates integrating `flask-simple-captcha` with WTForms and Flask-Security in a Flask application.
+
+### Code to access Simple Captcha easily inside your project
+In order to access the Simple Captcha Extension you might connect it to the flask extensions dict like that:
+
+```python
+# Fake extension registration, to be able to access this extension's instance later on
+app.extensions.update({"flask-simple-captcha": SIMPLE_CAPTCHA})
+```
 
 ### Code for Simple Captcha Field and Validation
+
 
 ```python
 import flask
@@ -21,13 +30,11 @@ SIMPLE_CAPTCHA_ERROR_CODES = {
 }
 
 class SimpleCaptchaWidget:
-    def simplecaptcha_html(self):
+    def __call__(self, field, error=None, **kwargs):
         simple_captcha = flask.current_app.extensions.get("flask-simple-captcha")
         captcha_dict = simple_captcha.create()
-        return Markup(simple_captcha.captcha_html(captcha_dict))
 
-    def __call__(self, field, error=None, **kwargs):
-        return self.simplecaptcha_html()
+        return Markup(simple_captcha.captcha_html(captcha_dict))
 
 class SimpleCaptcha:
     def __init__(self, message=None):
