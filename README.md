@@ -87,7 +87,7 @@ To add CAPTCHA protection to a route, you can use the following code:
 def example():
     if request.method == 'GET':
         new_captcha_dict = SIMPLE_CAPTCHA.create()
-        render_template('example.html', captcha=new_captcha_dict)
+        return render_template('your_template.html', captcha=new_captcha_dict)
     if request.method == 'POST':
         c_hash = request.form.get('captcha-hash')
         c_text = request.form.get('captcha-text')
