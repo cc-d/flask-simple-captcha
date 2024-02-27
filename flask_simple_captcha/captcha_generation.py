@@ -173,7 +173,8 @@ class CAPTCHA:
 
         inpu = (
             '<input type="text" class="simple-captcha-text"'
-            + 'name="captcha-text">\n'
+            + ' id="captcha-text"'
+            + ' name="captcha-text">\n'
             + '<input type="hidden" name="captcha-hash" '
             + 'value="%s">' % captcha['hash']
         )
