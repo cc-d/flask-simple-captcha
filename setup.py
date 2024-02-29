@@ -6,7 +6,7 @@ with open('README.md', 'r') as r:
 
 setup(
     name='flask-simple-captcha',
-    version='5.5.4',
+    version='5.5.5',
     description=(
         'Extremely simple, "Good Enough" captcha implemention for flask forms.'
         ' No server side session library required.'
