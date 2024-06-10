@@ -6,3 +6,5 @@ black
 isort
 pytest
 pytest-cov
+pytest-xdist
+pytest-html
