@@ -6,3 +6,6 @@ __pycache__/
 venv/
 .coverage
 .coverage*
+
+report.html
+coverage.xml
