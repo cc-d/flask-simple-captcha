@@ -275,7 +275,7 @@ TOTAL                                          223      0   100%
 
 ### Accessing the Debug Server
 
-Navigate to `localhost:5000` in your browser to view the debug server. You can also navigate to `localhost:5000/images` to view 50 CAPTCHA images at once, or `localhost:5000/image/<$NUMBER_OF_IMAGES>` to view an arbritrary amount of generated captchas.
+Navigate to `localhost:5000` in your browser to view the debug server. You can also navigate to `localhost:5000/images` to view 50 CAPTCHA images at once, or `localhost:5000/images/<$NUMBER_OF_IMAGES>` to view an arbritrary amount of generated captchas.
 
 ## Code Examples
 
