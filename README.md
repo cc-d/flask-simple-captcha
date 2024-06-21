@@ -226,14 +226,14 @@ tests.py::TestCaptchaUtils::test_no_hashed_text PASSED
 
 ---------- coverage: platform darwin, python 3.8.18-final-0 ----------
 Name                                         Stmts   Miss  Cover   Missing
---------------------------------------------------------------------------
+----------------------------------
 flask_simple_captcha/__init__.py                 3      0   100%
 flask_simple_captcha/captcha_generation.py      78      0   100%
 flask_simple_captcha/config.py                  10      0   100%
 flask_simple_captcha/img.py                     56      0   100%
 flask_simple_captcha/text.py                    25      0   100%
 flask_simple_captcha/utils.py                   51      0   100%
---------------------------------------------------------------------------
+----------------------------
 TOTAL                                          223      0   100%
 
 
