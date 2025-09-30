@@ -1,6 +1,9 @@
+#!/usr/bin/env python3
+# 公
 import sys
 import os.path as op
 import multiprocessing as mp
+
 from flask import Flask, request, render_template_string
 
 from flask_simple_captcha import CAPTCHA, DEFAULT_CONFIG
